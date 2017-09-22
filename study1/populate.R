@@ -3,6 +3,7 @@ stop("INTERATIVE - DO NOT SOURCE")
 
 library(readr)
 library(dplyr)
+
 source("study1/setup.R")
 
 # get source data and make into list of id->story
@@ -20,4 +21,6 @@ RQDA::closeProject()
 
 saveProjectToVault()
 
+# start RQDA
+library(RQDA)
 RQDA()

@@ -16,8 +16,12 @@ VAULT_NAME = "study1"
 saveProjectToVault = function(delete = T) {
   # read database
   db = readr::read_file_raw(RQDA_PROJECT_PATH)
-  #write to vault
-  secure::encrypt(.name = "study1", db)
+  # delete old vault if exists
+  vault_path = paste0("vault/", VAULT_NAME, ".rds.enc")
+  if(file.exists(vault_path))
+    file.remove(vault_path)
+  # write to vault
+  secure::encrypt(.name = VAULT_NAME, db)
   if (delete & file.exists(RQDA_PROJECT_PATH))
     file.remove(RQDA_PROJECT_PATH)
 }

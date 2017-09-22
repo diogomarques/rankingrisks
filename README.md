@@ -1,6 +1,8 @@
 # rankingrisks
 
-Pre-reqs:
+Pre-req packages:
 
-* install_github("hadley/secure")
-* install_github("Ronggui/RQDA")
+* hadley/dplyr
+* hadley/secure
+* hadley/readr
+* Ronggui/RQDA
