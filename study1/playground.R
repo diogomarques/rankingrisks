@@ -27,25 +27,37 @@ View(treecode)
 codings = filesByCodes()
 
 ###
-# Frequency table, sub-categories collapsed and non-collapsed
-# TODO: update on new categories
+# Frequency table, all codes
 ###
 cols.ordered = names(codings) %>% str_subset("coded") %>% sort(.)
 codings.ordered = codings %>% select(-fid) %>% select(filename, cols.ordered)
 #View(codings.ordered)
 codings.freq= codings.ordered %>% summarise_at(vars(starts_with("coded")), sum)
-#View(codings.freq)
-
-# all freqs, easier to read:
+# View(codings.freq)
 codings.freq.table = 
   tibble(code = names(codings.freq), freq = as.vector(codings.freq[1,], mode = "integer")) %>% 
   mutate(code = str_replace_all(code, "codedBy.", ""))
+codings.freq.table %>% arrange(code, desc(freq))
 View(codings.freq.table)
+
+###
+# Code category frequency
+##
+## TODODOODODODO
+
+# this needs to be two step to avoid more than 1 closure:
+# 1. extract used categories
+# 2. new df with added data
+# 3. wrangle sum
+
+###
+## Old version: does not work for new cats
+###
 
 # now with categories
 codings.freq.table.categories = codings.freq.table %>% mutate(category = case_when(
                                               str_detect(code, "theme")  ~ "theme",
-                                              str_detect(code, "access")  ~ "access",
+                                              str_detect(code, "opportunity")  ~ "opportunity",
                                               T ~ "CATEGORY MISSING"
                                               ),
                               subcategory = case_when(
