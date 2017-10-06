@@ -27,16 +27,6 @@ View(treecode)
 codings = filesByCodes()
 
 ###
-# sanity check: all files must have exactly one code in each existing category
-# TODO: update on new top-level categories
-###
-
-# check that one code in each top-level category is attributed to each file
-codings %>% transmute(n.theme = rowSums(select(., contains("codedBy.theme"))),
-                      n.access = rowSums(select(., contains("codedBy.access")))) %>%
-  filter(n.theme == 1 & n.access == 1) %>% summarise(n())
-
-###
 # Frequency table, sub-categories collapsed and non-collapsed
 # TODO: update on new categories
 ###
