@@ -17,6 +17,7 @@ openProject(RQDA_PROJECT_PATH)
 # Data retrieval / visual inspection
 ##
 View(getCodingTable())
+#View(getCodingTable() %>% filter(grepl("opport", codename)))
 View(filesByCodes())
 codecat = RQDAQuery("select * from codecat")
 View(codecat)
@@ -25,6 +26,7 @@ View(treecode)
 
 # get tidy codings table
 codings = filesByCodes()
+View(codings)
 
 ###
 # Frequency table, all codes
