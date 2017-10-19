@@ -16,21 +16,21 @@ openProject(RQDA_PROJECT_PATH)
 ##
 # Data retrieval / visual inspection
 ##
+# main tables:
 View(getCodingTable())
-#View(getCodingTable() %>% filter(grepl("opport", codename)))
 View(filesByCodes())
 codecat = RQDAQuery("select * from codecat")
 View(codecat)
 treecode = RQDAQuery("select * from treecode")
 View(treecode)
 
-# get tidy codings table
-codings = filesByCodes()
-View(codings)
+# example: inspect to which files codes with a certain pattern are attributed to:
+View(getCodingTable() %>% filter(grepl("knowledge", codename)))
 
 ###
 # Frequency table, all codes
 ###
+codings = filesByCodes()
 cols.ordered = names(codings) %>% str_subset("coded") %>% sort(.)
 codings.ordered = codings %>% select(-fid) %>% select(filename, cols.ordered)
 #View(codings.ordered)
