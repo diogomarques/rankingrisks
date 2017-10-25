@@ -55,6 +55,9 @@ codings = codings %>% select(category, code, subcode, fid)
 coding.f.subcode = codings %>% group_by(category, code, subcode) %>% summarise(n = n())
 View(.Last.value)
 
+# ... w/ descriptions
+
+
 # code frequency at code level
 codings.f.code = codings %>% group_by(category, code) %>% summarise(n = n())
 View(.Last.value)
@@ -62,6 +65,9 @@ View(.Last.value)
 # code frequency at category level
 codings.f.category = codings %>% group_by(category) %>% summarise(n = n())
 View(.Last.value)
+
+# ... w/ description
+
 
 
 ###
