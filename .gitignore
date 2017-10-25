@@ -36,3 +36,4 @@ vignettes/*.pdf
 # Raw data / RQDA files
 raw/*
 *.rqda
+*.csv
