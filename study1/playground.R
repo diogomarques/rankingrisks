@@ -19,62 +19,49 @@ openProject(RQDA_PROJECT_PATH)
 # main tables:
 View(getCodingTable())
 View(filesByCodes())
+
+# SQL tables:
 codecat = RQDAQuery("select * from codecat")
+codecat = codecat %>% filter(status == 1)
 View(codecat)
+
 treecode = RQDAQuery("select * from treecode")
+treecode = treecode %>% filter(status == 1)
 View(treecode)
+
+code = RQDAQuery("select * from freecode")
+code = code %>% filter(status == 1)
+View(code)
 
 # example: inspect to which files codes with a certain pattern are attributed to:
 View(getCodingTable() %>% filter(grepl("knowledge", codename)))
 
 ###
-# Frequency table, all codes
-###
-codings = filesByCodes()
-cols.ordered = names(codings) %>% str_subset("coded") %>% sort(.)
-codings.ordered = codings %>% select(-fid) %>% select(filename, cols.ordered)
-#View(codings.ordered)
-codings.freq= codings.ordered %>% summarise_at(vars(starts_with("coded")), sum)
-# View(codings.freq)
-codings.freq.table = 
-  tibble(code = names(codings.freq), freq = as.vector(codings.freq[1,], mode = "integer")) %>% 
-  mutate(code = str_replace_all(code, "codedBy.", ""))
-codings.freq.table %>% arrange(code, desc(freq))
-View(codings.freq.table)
-
-###
-# Code category frequency
-##
-## TODODOODODODO
-
-# this needs to be two step to avoid more than 1 closure:
-# 1. extract used categories
-# 2. new df with added data
-# 3. wrangle sum
-
-###
-## Old version: does not work for new cats
+# Big tidy data with subcodes, codes, categories, based on code
+# conventions.
 ###
 
-# now with categories
-codings.freq.table.categories = codings.freq.table %>% mutate(category = case_when(
-                                              str_detect(code, "theme")  ~ "theme",
-                                              str_detect(code, "opportunity")  ~ "opportunity",
-                                              T ~ "CATEGORY MISSING"
-                                              ),
-                              subcategory = case_when(
-                                str_detect(code, "access-un")  ~ "access_unattended", # hack to avoid mispellings
-                                str_detect(code, "theme-control")  ~ "theme-control",
-                                T ~ code
-                                )
-                              ) %>%
-  select(category, subcategory, freq) 
+# get codings
+codings = getCodingTable()
+# create splitted matrix
+codings.matrix = str_split_fixed(codings$codename, "-", 3) %>% as_data_frame()
+colnames(codings.matrix) = c("category", "code", "subcode")
+# bind them
+codings = codings %>% bind_cols(codings.matrix)
+# filter out irrelevant data
+codings = codings %>% select(category, code, subcode, fid)
 
-codings.freq.table.categories = codings.freq.table.categories %>% group_by(subcategory) %>% 
-  summarise(category = first(category), freq = sum(freq)) %>% group_by(category)%>% 
-  arrange(desc(freq), .by_group=T) %>% as_data_frame() %>% select(-category)
+# code frequency at subcode level
+coding.f.subcode = codings %>% group_by(category, code, subcode) %>% summarise(n = n())
+View(.Last.value)
 
-View(codings.freq.table.categories)
+# code frequency at code level
+codings.f.code = codings %>% group_by(category, code) %>% summarise(n = n())
+View(.Last.value)
+
+# code frequency at category level
+codings.f.category = codings %>% group_by(category) %>% summarise(n = n())
+View(.Last.value)
 
 
 ###
@@ -82,9 +69,3 @@ View(codings.freq.table.categories)
 ###
 closeProject()
 saveProjectToVault()
-
-
-# Trash:
-# search stories containing bathroom and shower
-# View(searchFiles("file like '%shower%'", content = T))
-# View(searchFiles("file like '%bath%'", content = T))
