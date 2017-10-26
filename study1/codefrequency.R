@@ -3,9 +3,9 @@ source("study1/setup.R")
 #
 # Compute code frequencies and output to CSV files
 #
-CSV_CATEGORY_FREQUENCY =  "study1/frequency_categories.csv"
-CSV_CODE_FREQUENCY =      "study1/frequency_codes.csv"
-CSV_SUBCODE_FREQUENCY =   "study1/frequency_subcodes.csv"
+OUT_CSV_CATEGORY_FREQUENCY =  "out/s1_frequency_categories.csv"
+OUT_CSV_CODE_FREQUENCY =      "out/s1_frequency_codes.csv"
+OUT_CSV_SUBCODE_FREQUENCY =   "out/s1_frequency_subcodes.csv"
 
 # open project
 openProject(RQDA_PROJECT_PATH)
@@ -42,8 +42,8 @@ codings.f.category = codings.f.category %>% left_join(codecat, by=c("category" =
   select(category, description = memo, n)
 
 # output to files
-write_csv(codings.f.category, CSV_CATEGORY_FREQUENCY)
-write_csv(codings.f.code, CSV_CODE_FREQUENCY)
-write_csv(codings.f.subcode, CSV_SUBCODE_FREQUENCY)
+OUT_write_csv(codings.f.category, OUT_CSV_CATEGORY_FREQUENCY)
+write_csv(codings.f.code, OUT_CSV_CODE_FREQUENCY)
+write_csv(codings.f.subcode, OUT_CSV_SUBCODE_FREQUENCY)
 
 closeProject()
