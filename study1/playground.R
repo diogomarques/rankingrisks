@@ -27,7 +27,6 @@ View(getCodingTable() %>% filter(grepl("knowledge", codename)))
 
 
 
-# TODO: which were the new codes & subcodes?
 
 ###
 # Clean-up

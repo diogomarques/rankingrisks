@@ -38,5 +38,3 @@ data %>%
 data %>%
   mutate(pph = 60 * 60 * compensation / interviewtime) %>%
   summarise(mean(pph), sd(pph)) # mean pay per hour
-
-# TODO: Story length
