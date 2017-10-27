@@ -33,6 +33,10 @@ vignettes/*.pdf
 *.knit.md
 .Rproj.user
 
+# Computed outputs
+out/*
+
 # Raw data / RQDA files
 raw/*
 *.rqda
+*.csv

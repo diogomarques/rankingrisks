@@ -2,6 +2,7 @@ library(RQDA)
 library(secure)
 library(readr)
 library(dplyr)
+library(stringr)
 
 # Helpers to set up RQDA project. Since RQDA files, as well as CSV, contain raw
 # data, they cannot be published to source control. Helpers here, and
