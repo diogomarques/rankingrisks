@@ -12,7 +12,7 @@ library(stringr)
 
 RQDA_PROJECT_PATH = "study1/study1.rqda"
 
-VAULT_NAME = "study1"
+RQDA_VAULT_NAME = "study1"
 
 RAW_DATA_DIR = "raw"
 
@@ -21,11 +21,11 @@ saveProjectToVault = function() {
   # read database
   db = readr::read_file_raw(RQDA_PROJECT_PATH)
   # delete old vault if exists
-  vault_path = paste0("vault/", VAULT_NAME, ".rds.enc")
+  vault_path = paste0("vault/", RQDA_VAULT_NAME, ".rds.enc")
   if(file.exists(vault_path))
     file.remove(vault_path)
   # write to vault
-  secure::encrypt(.name = VAULT_NAME, db)
+  secure::encrypt(.name = RQDA_VAULT_NAME, db)
 }
 
 # Restores RQDA project from secure vault. By default, does not overwrite if RQDA
@@ -48,7 +48,9 @@ saveRawDataToVault = function() {
   
   
 }
-# Save all raw data files to vault
+
+
+# TODO: Save all raw data files to vault
 if(dir.exists(RAW_DATA_DIR)) {
   files = list.files(RAW_DATA_DIR)
   # TODO: check if there are any files
