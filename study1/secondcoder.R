@@ -65,14 +65,15 @@ getCodes_ = function(category, descriptions) {
   
   # check: number of codes equal number of descriptions
   if(length(description.vector) != length(codes))
-    stop("Number of codes does not match number of descriptions")
+    stop(paste("Number of codes does not match number of descriptions on ", descriptions)
+         )
 
   # return codes
   codes
 }
 # testing
-#category = "process"
-#descriptions = "Active subject inspected archives of non-public conversations in text form, such as text messages, emails, instant messages, or chats., Active subject inspected archives of visual media, such as photo galleries."
+#category = "relationshiptype"
+#descriptions = "Subjects are friends, including people from work or school who are considered friends."
 #descriptions = NA
 #getCodes_(category, descriptions)
 
@@ -84,12 +85,23 @@ getCodes = function(category, descriptions.vector) {
   sapply(codes, paste, collapse=",")
 }
 # testing
-#category = "process"
-#descriptions.vector = responses.clean$process
+#category = "relationshiptype"
+#descriptions.vector = responses.clean$relationshiptype
 #getCodes(category, descriptions.vector)
 
 # s & r per code category
+responses.clean %>% mutate(
+  relationshiptype.codes = getCodes("relationshiptype", relationshiptype),
+  opportunity.codes = getCodes("opportunity", opportunity),
+  lock.codes = getCodes("lock", lock),
+  motivation.codes = getCodes("motivation", motivation),
+  process.codes = getCodes("process", process),
+  knowledge.codes = getCodes("knowledge", knowledge),
+  aftermath.codes = getCodes("aftermath", aftermath),
+  status.codes = getCodes("status", status)
+  )
 
-
+# diagnose problem in e.g. motivation
+#codebook.flat %>% filter(grepl("motivation", codename)) %>% distinct(description) %>% .$description
 
 # objective: obtain codings table (codename | fid)
