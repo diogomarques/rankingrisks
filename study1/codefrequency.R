@@ -42,7 +42,7 @@ codings.f.category = codings.f.category %>% left_join(codecat, by=c("category" =
   select(category, description = memo, n)
 
 # output to files
-OUT_write_csv(codings.f.category, OUT_CSV_CATEGORY_FREQUENCY)
+write_csv(codings.f.category, OUT_CSV_CATEGORY_FREQUENCY)
 write_csv(codings.f.code, OUT_CSV_CODE_FREQUENCY)
 write_csv(codings.f.subcode, OUT_CSV_SUBCODE_FREQUENCY)
 
