@@ -94,14 +94,14 @@ getCodes = function(category, descriptions.vector) {
 
 # s & r per code category
 responses.clean = responses.clean %>% mutate(
-          relationshiptype.codes = getCodes("relationshiptype", relationshiptype),
-          opportunity.codes = getCodes("opportunity", opportunity),
-          lock.codes = getCodes("lock", lock),
-          motivation.codes = getCodes("motivation", motivation),
-          process.codes = getCodes("process", process),
-          knowledge.codes = getCodes("knowledge", knowledge),
-          aftermath.codes = getCodes("aftermath", aftermath),
-          status.codes = getCodes("status", status)
+          relationshiptype = getCodes("relationshiptype", relationshiptype),
+          opportunity = getCodes("opportunity", opportunity),
+          lock = getCodes("lock", lock),
+          motivation = getCodes("motivation", motivation),
+          process = getCodes("process", process),
+          knowledge = getCodes("knowledge", knowledge),
+          aftermath = getCodes("aftermath", aftermath),
+          status = getCodes("status", status)
           )
 
 # diagnose problem in e.g. motivation
@@ -111,15 +111,20 @@ responses.clean = responses.clean %>% mutate(
 
 # prep tables per coder
 # ivan codes
-ivan = responses.clean %>% filter(rater == "ivan") %>% select(fid, contains("codes"), comments)
+ivan = responses.clean %>% filter(rater == "ivan") %>% select(-timestamp)
 
 # my codes, in same format
 diogo = codings %>% 
   select(fid, codename, category) %>% 
   group_by(fid, category) %>% 
   summarise(codes = toString((codename))) %>% 
-  spread(category, codes)
+  spread(category, codes) %>%
+  mutate(rater = "diogo")
 
+both = bind_rows(ivan, diogo) %>%
+  filter(fid <= 10) %>%
+  arrange(fid, rater)
 
+write_csv(both, "out/s1_combined_raters_round1_1-10.csv")
 
 # objective: obtain codings table (codename | fid) & find disagreements
