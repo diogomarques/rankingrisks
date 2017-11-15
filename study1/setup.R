@@ -39,6 +39,9 @@ restoreProjectFromVault = function(overwrite = F) {
   }
 }
 
+stop("playground next")
+
+# TODO: Save all raw data files to vault
 saveRawDataToVault = function() {
   # check that there is a raw folder with files to save
   if(dir.exists(RAW_DATA_DIR)) {
@@ -48,9 +51,6 @@ saveRawDataToVault = function() {
   
   
 }
-
-
-# TODO: Save all raw data files to vault
 if(dir.exists(RAW_DATA_DIR)) {
   files = list.files(RAW_DATA_DIR)
   # TODO: check if there are any files

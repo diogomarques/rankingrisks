@@ -4,14 +4,17 @@ library(dplyr)
 library(googlesheets)
 library(secure)
 library(stringr)
+library(tidyr)
 
 ##
 # Retrieves second rater codings from G Form results and finds mismatches.
 #
 
-## Get codings data from prev script that's going to be needed here
+## Get codings data from prev script (going to be needed here)
+# TODO: messy. find better way to do this.
 source("study1/codefrequency.R")
-rm(list = ls()[ls() != "codings.f.subcode"])
+rm(list = ls()[ls() != "codings.f.subcode" & ls() != "codings"])
+
 
 ## Get responses googlesheet from vault
 SHEETS_VAULT = "sheets"
@@ -90,18 +93,33 @@ getCodes = function(category, descriptions.vector) {
 #getCodes(category, descriptions.vector)
 
 # s & r per code category
-responses.clean %>% mutate(
-  relationshiptype.codes = getCodes("relationshiptype", relationshiptype),
-  opportunity.codes = getCodes("opportunity", opportunity),
-  lock.codes = getCodes("lock", lock),
-  motivation.codes = getCodes("motivation", motivation),
-  process.codes = getCodes("process", process),
-  knowledge.codes = getCodes("knowledge", knowledge),
-  aftermath.codes = getCodes("aftermath", aftermath),
-  status.codes = getCodes("status", status)
-  )
+responses.clean = responses.clean %>% mutate(
+          relationshiptype.codes = getCodes("relationshiptype", relationshiptype),
+          opportunity.codes = getCodes("opportunity", opportunity),
+          lock.codes = getCodes("lock", lock),
+          motivation.codes = getCodes("motivation", motivation),
+          process.codes = getCodes("process", process),
+          knowledge.codes = getCodes("knowledge", knowledge),
+          aftermath.codes = getCodes("aftermath", aftermath),
+          status.codes = getCodes("status", status)
+          )
 
 # diagnose problem in e.g. motivation
 #codebook.flat %>% filter(grepl("motivation", codename)) %>% distinct(description) %>% .$description
 
-# objective: obtain codings table (codename | fid)
+## Compare codings manually
+
+# prep tables per coder
+# ivan codes
+ivan = responses.clean %>% filter(rater == "ivan") %>% select(fid, contains("codes"), comments)
+
+# my codes, in same format
+diogo = codings %>% 
+  select(fid, codename, category) %>% 
+  group_by(fid, category) %>% 
+  summarise(codes = toString((codename))) %>% 
+  spread(category, codes)
+
+
+
+# objective: obtain codings table (codename | fid) & find disagreements
