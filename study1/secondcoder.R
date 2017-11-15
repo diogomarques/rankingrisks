@@ -72,25 +72,26 @@ getCodes_ = function(category, descriptions) {
          )
 
   # return codes
-  codes
+  sort(codes)
 }
 # testing
-#category = "relationshiptype"
-#descriptions = "Subjects are friends, including people from work or school who are considered friends."
+category = "relationshiptype"
+descriptions = "Subjects are friends, including people from work or school who are considered friends."
 #descriptions = NA
-#getCodes_(category, descriptions)
+getCodes_(category, descriptions)
 
 
 # vectorized version - receives a vector of descriptions strings; if a string has more than
 # one description, codenames are returned comma-separated
 getCodes = function(category, descriptions.vector) {
+  # TODO: try out purr here
   codes = sapply(descriptions.vector, getCodes_, category = category, USE.NAMES = F)
-  sapply(codes, paste, collapse=",")
+  sapply(codes, paste, collapse=", ")
 }
 # testing
-#category = "relationshiptype"
-#descriptions.vector = responses.clean$relationshiptype
-#getCodes(category, descriptions.vector)
+# category = "relationshiptype"
+# descriptions.vector = responses.clean$relationshiptype
+# getCodes(category, descriptions.vector)
 
 # s & r per code category
 responses.clean = responses.clean %>% mutate(
@@ -117,7 +118,7 @@ ivan = responses.clean %>% filter(rater == "ivan") %>% select(-timestamp)
 diogo = codings %>% 
   select(fid, codename, category) %>% 
   group_by(fid, category) %>% 
-  summarise(codes = toString((codename))) %>% 
+  summarise(codes = toString(sort(unique(codename)))) %>% # TODO: untangle
   spread(category, codes) %>%
   mutate(rater = "diogo")
 

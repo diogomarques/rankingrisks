@@ -1,4 +1,4 @@
-#source("study1/setup.R")
+source("study1/setup.R")
 
 #
 # Compute code frequencies and output to CSV files

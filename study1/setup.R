@@ -39,7 +39,8 @@ restoreProjectFromVault = function(overwrite = F) {
   }
 }
 
-stop("playground next")
+# fake function just to isolate this play code 
+playground = function() {
 
 # TODO: Save all raw data files to vault
 saveRawDataToVault = function() {
@@ -60,4 +61,4 @@ if(dir.exists(RAW_DATA_DIR)) {
   apply(valuables, 1, function(x) encrypt(.name = x[1], x[2]))
 }
 
-
+}
