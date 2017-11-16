@@ -27,8 +27,8 @@ key = decrypt(SHEETS_VAULT)$s1_coding_responses
 responses = gs_read(gs_key(key))
 
 # clean column names
-responses.clean = responses
-names(responses.clean) = c("timestamp", "rater", "fid", "relationshiptype", 
+responses.shortvar = responses
+names(responses.shortvar) = c("timestamp", "rater", "fid", "relationshiptype", 
                            "opportunity", "lock", "motivation", "process", 
                            "knowledge", "aftermath", "status", "comments")
 
@@ -94,7 +94,7 @@ getCodes = function(category, descriptions.vector) {
 # getCodes(category, descriptions.vector)
 
 # s & r per code category
-responses.clean = responses.clean %>% mutate(
+responses.clean = responses.shortvar %>% mutate(
           relationshiptype = getCodes("relationshiptype", relationshiptype),
           opportunity = getCodes("opportunity", opportunity),
           lock = getCodes("lock", lock),
@@ -128,4 +128,17 @@ both = bind_rows(ivan, diogo) %>%
 
 write_csv(both, "out/s1_combined_raters_round1_1-10.csv")
 
-# objective: obtain codings table (codename | fid) & find disagreements
+# Calculate agreement
+
+diogo.matrix = filesByCodes() %>% 
+  select(-filename) %>%
+  arrange(fid) 
+
+# ivan matrix:
+ivan %>% select(-comments) %>% separate_rows(process, aftermath, sep = ", ")
+# Error: All nested columns must have the same number of elements.
+
+# substitute multiple responses 1 cell per multiple rows (separate_rows)
+# add 1 as value to all
+# spread
+# fill remaining with 0's 
