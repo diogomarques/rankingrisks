@@ -135,10 +135,22 @@ diogo.matrix = filesByCodes() %>%
   arrange(fid) 
 
 # ivan matrix:
-ivan %>% select(-comments) %>% separate_rows(process, aftermath, sep = ", ")
-# Error: All nested columns must have the same number of elements.
+# gather to fid-> codename map
+ivan.codings.untidy = ivan %>% 
+  select(-comments, -rater) %>% 
+  gather(category, codename, -fid)
 
-# substitute multiple responses 1 cell per multiple rows (separate_rows)
-# add 1 as value to all
-# spread
-# fill remaining with 0's 
+# separate multiple codings on process, aftermath
+ivan.codings = ivan.codings.untidy %>% 
+  # create a lists of codenames instead of sequences
+  mutate(codename = str_split(codename, pattern = ", ")) %>%
+  # unfold list
+  unnest() %>%
+  # remove "NA"'s
+  filter(codename != "NA")
+
+# create empty codings table w/ all codes in book
+
+# join with ivan codings, w/ status 0 or 1
+
+# spread intro matrix
