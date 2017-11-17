@@ -140,17 +140,28 @@ ivan.codings.untidy = ivan %>%
   select(-comments, -rater) %>% 
   gather(category, codename, -fid)
 
-# separate multiple codings on process, aftermath
+# separate multiple codings (separate_rows does not work due to varying lenghts)
 ivan.codings = ivan.codings.untidy %>% 
   # create a lists of codenames instead of sequences
   mutate(codename = str_split(codename, pattern = ", ")) %>%
   # unfold list
   unnest() %>%
   # remove "NA"'s
-  filter(codename != "NA")
+  filter(codename != "NA") %>%
+  # dump categories col
+  select(-category) %>%
+  # add status
+  mutate(status = 1)
 
 # create empty codings table w/ all codes in book
+fids = list(1:10)
+empty.codings.10 = codebook.flat %>% select(codename) %>% mutate(fid = fids) %>% unnest()
 
 # join with ivan codings, w/ status 0 or 1
+ivan.codings.full = empty.codings.10 %>% 
+  left_join(ivan.codings, by = c("codename", "fid")) 
 
 # spread intro matrix
+ivan.codings.full %>% spread(codename, status, fill = 0)
+
+# make sure that col names & order match, for comparison.
