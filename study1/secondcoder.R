@@ -162,6 +162,16 @@ ivan.codings.full = empty.codings.10 %>%
   left_join(ivan.codings, by = c("codename", "fid")) 
 
 # spread intro matrix
-ivan.codings.full %>% spread(codename, status, fill = 0)
+ivan.matrix = ivan.codings.full %>% 
+  spread(codename, status, fill = 0)
 
 # make sure that col names & order match, for comparison.
+names(diogo.matrix) = names(diogo.matrix) %>% 
+  str_replace(pattern = "codedBy\\.", replacement = "")
+ivan.matrix = ivan.matrix %>% 
+  select(one_of(names(diogo.matrix)))
+
+# example matrix operation
+{diogo.matrix %>% filter(fid <= 10)} == ivan.matrix
+
+# something wrong here
