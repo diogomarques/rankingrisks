@@ -35,32 +35,58 @@ write_csv(both, "out/s1_combined_raters_round1_1-10.csv")
 ## Prepare data to calculate agreement scores
 ##
 ## Difficulty here is that for "choose one" categories, each code can be seen as
-## a value the variable, wheres in "choose all that apply" categories, each code 
-## as a variable itself. To calculate agreement, codes in "choose all that apply" 
+## a value the variable, whereas in "choose all that apply" categories, each code 
+## is a variable itself. To calculate agreement, codes in "choose all that apply" 
 ## have to be expanded to reflect all possible decisions, with each item being
 ## a variable with binary value.
 
 # create empty codings table w/ all codes in book
-# a bunch of list to nest with empty codes
-fids = list(fid = codings %>% distinct(.$fid))
-empty.codings = 
+# a bunch of list to nest with empty codes.
+# start with lists of existings file ids and raters.
+fids = list(fid = {codings %>% distinct(fid)})
+raters = list(rater = {codings %>% distinct(rater)})
+codenames = 
   codebook %>% 
   filter(str_detect(codename, "^aftermath\\-|^process\\-")) %>%
-  select(codename) %>% 
-  mutate(fid = fids) %>% 
+  select(codename)
+
+# create a tible of codename | list of codings | list of raters, then unnest to
+# get all combinations
+empty.codings = 
+  codenames %>%
+  mutate(fid = fids) %>%
   unnest() %>%
-  select(fid = `.$fid`, codename)
+  mutate(rater = raters) %>%
+  unnest() %>%
 
-# TODO next: apply the extra NO decisions to each rater. 
+# join with codings table, with an explicit variable indicating selection
+codings.complete =
+  codings %>% 
+  mutate(selected = "yes") %>%
+  full_join(empty.codings, by = c("rater", "fid", "codename")) %>%
+  mutate(selected = ifelse(is.na(selected), "no", selected))
+#check: n() yes must be equal to length of original codings tbl 
+#codings.complete %>% group_by(selected) %>% summarize(n())
 
+# add decisions variable
+codings.complete.decision =
+  codings.complete %>%
+  # which is the variable
+  mutate(variable = ifelse(
+    str_detect(codename, "^aftermath\\-|^process\\-"), # if multi
+    codename, # decision is the code
+    str_extract(codename, "^[a-z]+(?=\\-)") # else, it's category
+    )
+  ) %>%
+  # which is the value
+  mutate(value = ifelse(
+    str_detect(codename, "^aftermath\\-|^process\\-"), # if multi
+    selected, # value is y/n
+    codename # value is the codename
+    )
+  )
 
-# join codings, w/ status 0 or 1
-#codings.full = 
-#  empty.codings %>% 
-#  left_join(codings, by = c("codename", "fid")) 
-
-
-# TODO: this can go. use IRR functions instead.
+# TODO: match format to IRR formats.
 # agree, iota, kappa2, kappam.fleiss (w/ and w/o exact / detail = T)
 
 
