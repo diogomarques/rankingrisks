@@ -130,7 +130,64 @@ codings =
   select(rater, fid, codename) %>%
   bind_rows(rn.codings)
 
+## Prepare data to calculate agreement scores
+##
+## Difficulty here is that for "choose one" categories, each code can be seen as
+## a value the variable, whereas in "choose all that apply" categories, each code 
+## is a variable itself. To calculate agreement, codes in "choose all that apply" 
+## have to be expanded to reflect all possible decisions, with each item being
+## a variable with binary value.
+
+# get all multiple option codes available
+codenames.multi = 
+  codebook %>% 
+  filter(str_detect(codename, "^aftermath\\-|^process\\-")) %>%
+  select(codename)
+
+# create a tible of rater | fid | list of all available multi  codes, filtered 
+# to only existing fid/rater combinations
+empty.codings = 
+  codings %>%
+  distinct(rater, fid) %>%
+  mutate(codename = list(codenames.multi)) %>%
+  unnest()
+
+# join with codings table, with an explicit variable indicating selection
+codings.complete =
+  codings %>% 
+  mutate(selected = "yes") %>%
+  full_join(empty.codings, by = c("rater", "fid", "codename")) %>%
+  mutate(selected = ifelse(is.na(selected), "no", selected))
+#check: n() yes must be equal to length of original codings tbl 
+# codings.complete %>% group_by(selected) %>% summarize(n())
+
+# add decisions variable
+codings.complete =
+  codings.complete %>%
+  # which is the variable
+  mutate(variable = ifelse(
+    str_detect(codename, "^aftermath\\-|^process\\-"), # if multi
+    codename, # decision is the code
+    str_extract(codename, "^[a-z]+(?=\\-)") # else, it's category
+  )
+  ) %>%
+  # which is the value
+  mutate(value = ifelse(
+    str_detect(codename, "^aftermath\\-|^process\\-"), # if multi
+    selected, # value is y/n
+    codename # value is the codename
+  )
+  )
+
+# widen data to match IRR function
+codings.complete.wide = 
+  codings.complete %>% 
+  select(fid, variable, value, rater) %>%
+  arrange(fid, variable, rater) %>%
+  spread(rater, value) 
+
+
 # clean-up
 rm(r1.codings, responses.shortvar, rn.codings, rn.codings.untidy, 
-   key, SHEETS_VAULT, getCodes, getCodes_)
+   key, SHEETS_VAULT, getCodes, getCodes_, empty.codings, codenames.multi)
 
