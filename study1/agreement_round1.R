@@ -38,7 +38,10 @@ write_csv(both, "out/s1_combined_raters_round1_1-10.csv")
 ##
 
 # Round 1, rater 1 vs. rater 2
-data = codings.complete.wide %>% select(diogo, ivan) %>% filter(complete.cases(.))
+data = 
+  codings.complete.wide %>% 
+  select(diogo, ivan) %>% 
+  filter(complete.cases(.))
 glue("Agreement between raters 1 and 2 on first 10 stories, ", 
      " prior to any changes towards consensus")
 agree(data)
@@ -48,5 +51,14 @@ kappam.fleiss(data, detail = T)
 kappam.fleiss(data, exact = T)
 
 # TODO: iota, needs list of tables, 1 per variable
+data = 
+  codings.complete.wide %>% 
+  select(-tiago) %>% 
+  filter(complete.cases(.)) %>%
+  split(f = .$variable) %>%
+  purrr:
+  # TODO: use purr to remove unwanted vectors from every list, i.e. fid & variable
 
+data
 
+iota(data)
