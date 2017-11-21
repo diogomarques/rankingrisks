@@ -37,5 +37,16 @@ write_csv(both, "out/s1_combined_raters_round1_1-10.csv")
 # Calculate agreement scores
 ##
 
-# TODO: agree, iota, kappa2, kappam.fleiss (w/ and w/o exact / detail = T)
+# Round 1, rater 1 vs. rater 2
+data = codings.complete.wide %>% select(diogo, ivan) %>% filter(complete.cases(.))
+glue("Agreement between raters 1 and 2 on first 10 stories, ", 
+     " prior to any changes towards consensus")
+agree(data)
+kappa2(data)
+kappam.fleiss(data)
+kappam.fleiss(data, detail = T)
+kappam.fleiss(data, exact = T)
+
+# TODO: iota, needs list of tables, 1 per variable
+
 
