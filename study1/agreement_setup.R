@@ -7,6 +7,7 @@ library(googlesheets)
 library(secure)
 library(stringr)
 library(tidyr)
+library(RQDA)
 
 # Retrive 1st rater data & codebook from RQDA
 

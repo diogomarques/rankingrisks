@@ -1,14 +1,13 @@
 source("study1/agreement_setup.R")
 library(glue)
-library(scales)
 library(irr)
+library(purrr)
 
 ##
 # What's was the agreement after the first round of coding by raters 1 & 2?
 ## 
 
 ## Compare first 10 codes between raters 1 & 2 manually
-# TODO: expand to 3rd rater
 
 # 2nd rater codes (using responses clean to preserve comments)
 r2.codings.wide = 
@@ -38,27 +37,26 @@ write_csv(both, "out/s1_combined_raters_round1_1-10.csv")
 ##
 
 # Round 1, rater 1 vs. rater 2
+# prep data
 data = 
   codings.complete.wide %>% 
   select(diogo, ivan) %>% 
   filter(complete.cases(.))
+# iota needs special data format: list of dfs per variable
+data.split = 
+  codings.complete.wide %>% 
+  select(-tiago) %>% 
+  filter(complete.cases(.)) %>%
+  split(f = .$variable) %>% # split to list of dfs
+  map(. %>% select(diogo, ivan)) # purrr magic, select is applied to each
+
 glue("Agreement between raters 1 and 2 on first 10 stories, ", 
      " prior to any changes towards consensus")
 agree(data)
 kappa2(data)
-kappam.fleiss(data)
-kappam.fleiss(data, detail = T)
-kappam.fleiss(data, exact = T)
+# kappam.fleiss(data)
+# kappam.fleiss(data, exact = T)
+iota(data.split, scaledata = "nominal")
 
-# TODO: iota, needs list of tables, 1 per variable
-data = 
-  codings.complete.wide %>% 
-  select(-tiago) %>% 
-  filter(complete.cases(.)) %>%
-  split(f = .$variable) %>%
-  purrr:
-  # TODO: use purr to remove unwanted vectors from every list, i.e. fid & variable
-
-data
-
-iota(data)
+# TODO: expand to 3rd rater
+# out to file
