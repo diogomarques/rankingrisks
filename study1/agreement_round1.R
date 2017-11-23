@@ -47,27 +47,42 @@ write_csv(all, "out/s1_combined_all_round1_1-10.csv")
 # Calculate agreement scores
 ##
 
-# Round 1, rater 1 vs. rater 2
-# prep data
-data = 
-  codings.complete.wide %>% 
-  select(diogo, ivan) %>% 
-  filter(complete.cases(.))
 # iota needs special data format: list of dfs per variable
 data.split = 
   codings.complete.wide %>% 
-  select(-tiago) %>% 
-  filter(complete.cases(.)) %>%
   split(f = .$variable) %>% # split to list of dfs
-  map(. %>% select(diogo, ivan)) # purrr magic, select is applied to each
+  map(. %>% select(diogo, tiago, ivan)) # purrr magic, select is applied to each 
+                                        # to remove extra cols
+data.split.all = 
+  data.split %>% 
+  map(. %>% filter(complete.cases(.)))
 
-glue("Agreement between raters 1 and 2 on first 10 stories, ", 
+data.split.r1.r2 = 
+  data.split %>%
+  map(. %>% select(diogo, ivan) %>% filter(complete.cases(.)))
+
+data.split.r1.r3 = 
+  data.split %>%
+  map(. %>% select(diogo, tiago) %>% filter(complete.cases(.)))
+
+# Output:
+
+glue("Agreement between raters 1 and 2 on first round, ", 
      " prior to any changes towards consensus")
-agree(data)
-kappa2(data)
-# kappam.fleiss(data)
-# kappam.fleiss(data, exact = T)
-iota(data.split, scaledata = "nominal")
+agree(codings.complete.wide %>% select(diogo, ivan))
+kappa2(codings.complete.wide %>% select(diogo, ivan))
+iota(data.split.r1.r2, scaledata = "nominal")
 
-# TODO: expand to 3rd rater
-# out to file
+glue("Agreement between raters 2 and 3 on first round, ", 
+     " prior to any changes towards consensus")
+agree(codings.complete.wide %>% select(diogo, tiago))
+kappa2(codings.complete.wide %>% select(diogo, tiago))
+iota(data.split.r1.r3, scaledata = "nominal")
+
+
+glue("Agreement between all raters on first round, ", 
+     " prior to any changes towards consensus")
+agree(codings.complete.wide %>% select(diogo, ivan, tiago))
+kappam.fleiss(codings.complete.wide %>% select(diogo, ivan, tiago))# , exact = T)
+iota(data.split.all, scaledata = "nominal")
+
