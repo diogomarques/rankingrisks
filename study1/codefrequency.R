@@ -1,11 +1,6 @@
-source("study1/setup.R")
-
 #
 # Compute code frequencies and output to CSV files
 #
-OUT_CSV_CATEGORY_FREQUENCY =  "out/s1_frequency_categories.csv"
-OUT_CSV_CODE_FREQUENCY =      "out/s1_frequency_codes.csv"
-OUT_CSV_SUBCODE_FREQUENCY =   "out/s1_frequency_subcodes.csv"
 
 # open project
 openProject(RQDA_PROJECT_PATH)
@@ -46,4 +41,8 @@ write_csv(codings.f.category, OUT_CSV_CATEGORY_FREQUENCY)
 write_csv(codings.f.code, OUT_CSV_CODE_FREQUENCY)
 write_csv(codings.f.subcode, OUT_CSV_SUBCODE_FREQUENCY)
 
+# close project
 closeProject()
+
+# clean-up
+rm(list = ls() %>% str_subset("^code|^coding"))

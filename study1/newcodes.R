@@ -1,13 +1,6 @@
-source("study1/setup.R")
-
 #
 # Analyze codebook growth
 #
-
-OUT_CODE_PLOT = "out/s1_cummulative_codes"
-OUT_SUBCODE_PLOT = "out/s1_cummulative_subcodes"
-OUT_CSV_NEW_CODES = "out/s1_new_codes_per_wave.csv"
-OUT_CSV_NEW_SUBCODES = "out/s1_new_subcodes_per_wave.csv"
 
 # open RQDA project
 openProject(RQDA_PROJECT_PATH)
@@ -84,3 +77,6 @@ dev.off()
 
 # close project
 closeProject()
+
+# clean-up
+rm(list = ls() %>% str_subset("code|codings"))
