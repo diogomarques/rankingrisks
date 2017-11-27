@@ -1,20 +1,7 @@
-library(RQDA)
-library(secure)
-library(readr)
-library(dplyr)
-library(stringr)
-
-# Helpers to set up RQDA project. Since RQDA files, as well as CSV, contain raw
-# data, they cannot be published to source control. Helpers here, and
-# .gitignore, make that easier to manage, by encrypting all data.
-
-# TODO: move from local key to maybe github key for encrypt/decrypt
-
-RQDA_PROJECT_PATH = "study1/study1.rqda"
-
-RQDA_VAULT_NAME = "study1"
-
-RAW_DATA_DIR = "raw"
+# Helpers to set up RQDA project. Since RQDA files contain raw
+# data, they cannot be published unencrypted to source control. 
+# These helpers, and .gitignore, make it easier to only commit 
+# encrypted data.
 
 # Saves RQDA project to secure vault.
 saveProjectToVault = function() {
@@ -39,7 +26,10 @@ restoreProjectFromVault = function(overwrite = F) {
   }
 }
 
+stop("saveProjectToVault and restoreProjectFromVault loaded
+     to env. No need to continue.")
 # fake function just to isolate this play code 
+
 playground = function() {
 
 # TODO: Save all raw data files to vault

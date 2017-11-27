@@ -6,10 +6,9 @@ If you are not one of my collaborators, and have not been added by e.g. your Git
 
 Packages required:
 
-* dplyr
-* secure
-* readr
-* stringr
-* googlesheets
+* tidyverse
 * RQDA
+* hadley/secure
+* googlesheets
+* glue
 

@@ -1,13 +1,6 @@
-stop("INTERACTIVE - DO NOT SOURCE")
 #
 # Story lenght statistics, pre- and post-editing.
 #
-
-library(dplyr)
-library(googlesheets)
-library(stringr)
-
-SHEETS_VAULT = "sheets"
 
 # save sheet keys to vault, instead of exposing them
 # key.s1_raw_stories = gs_ls() %>% 
@@ -41,5 +34,12 @@ stories = stories %>%
   mutate(raw.wc = str_count(raw), edited.wc = str_count(edited))
 
 # summarise
-stories %>% 
+wordcount = 
+  stories %>% 
   summarise(mean(raw.wc), sd(raw.wc), mean(edited.wc), sd(edited.wc))
+
+# out to file
+write_csv(wordcount, path = OUT_S1_WORDCOUNT)
+
+# clean-up
+rm(list = ls() %>% str_subset("stories|wordcount|key"))
