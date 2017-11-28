@@ -2,16 +2,8 @@
 # Clean-up and prepare data for inspecting agreement between raters.
 ##
 
-library(dplyr)
-library(googlesheets)
-library(secure)
-library(stringr)
-library(tidyr)
-library(RQDA)
-
 # Retrive 1st rater data & codebook from RQDA
-
-openProject("study1/study1.rqda")
+openProject(RQDA_PROJECT_PATH)
 
 # rater1's codings from RQDA
 r1.codings = getCodingTable() %>% 
@@ -25,7 +17,6 @@ codebook = RQDAQuery("select * from freecode") %>%
 closeProject()
 
 # retrieve additional rater codings from G Form results.
-SHEETS_VAULT = "sheets"
 # save sheet keys to vault
 # key.s1_coding_responses = gs_ls(regex = "Story coding \\(v2) \\(Responses)")  %>% 
 #    select(sheet_key) %>%
@@ -189,6 +180,7 @@ codings.complete.wide =
 
 
 # clean-up
-rm(r1.codings, responses.shortvar, rn.codings, rn.codings.untidy, 
-   key, SHEETS_VAULT, getCodes, getCodes_, empty.codings, codenames.multi)
+responses = responses.clean
+rm(r1.codings, codings.complete, responses.shortvar, rn.codings, rn.codings.untidy, 
+   key, responses.clean, getCodes, getCodes_, empty.codings, codenames.multi)
 

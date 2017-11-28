@@ -7,8 +7,12 @@ If you are not one of my collaborators, and have not been added by e.g. your Git
 Packages required:
 
 * tidyverse
-* RQDA
-* hadley/secure
-* googlesheets
 * glue
+* RQDA: to handle qualitative data codings
+* irr: to measure inter-rater agreement
+* hadley/secure: to encrypt raw data
+* googlesheets: to retrieve data on Google Sheets
 
+Tags:
+
+* "round1": RQDA database and analysis code prior to first round of coding consensus.
