@@ -33,6 +33,9 @@ vignettes/*.pdf
 *.knit.md
 .Rproj.user
 
+# All HTML
+*.html
+
 # Computed outputs
 out/*
 
