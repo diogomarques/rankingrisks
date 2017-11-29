@@ -99,6 +99,30 @@ responses.clean = responses.shortvar %>% mutate(
   # filter out dummy rater
   filter(rater != "cthulhu")
 
+# code corrections for external raters, based on first round of consensus
+# TODO: had this in-place manipulation. there must be a better way
+responses.clean[responses.clean$rater == "ivan" 
+                & responses.clean$fid == 3, ]$lock =
+  "lock-ineffective-observed"
+responses.clean[responses.clean$rater == "ivan" 
+                & responses.clean$fid == 6, ]$opportunity =
+  "opportunity-unattended-bathroom"
+responses.clean[responses.clean$rater == "ivan" 
+                & responses.clean$fid == 7, ]$relationshiptype =
+  "relationshiptype-nonintimate-friends"
+responses.clean[responses.clean$rater == "ivan" 
+                & responses.clean$fid == 7, ]$process =
+  "process-exfiltration-contacts, process-snooping-notifications"
+responses.clean[responses.clean$rater == "ivan" 
+                & responses.clean$fid == 8, ]$motivation =
+  "motivation-control-intimate"
+responses.clean[responses.clean$rater == "ivan" 
+                & responses.clean$fid == 9, ]$lock =
+  "lock-ineffective-known"
+responses.clean[responses.clean$rater == "ivan" 
+                & responses.clean$fid == 10, ]$status =
+  "status-unspecified"
+
 # gather to (fid,rater) -> codename map
 rn.codings.untidy = responses.clean %>% 
   select(-comments, -timestamp) %>% 
