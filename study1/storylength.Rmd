@@ -1,0 +1,73 @@
+---
+title: "Story lenght statistics, pre- and post-editing"
+output: html_notebook
+---
+```{r "setup", include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "..")
+source("setup.R")
+```
+
+Raw and edited versions of stories are stored in separate Google Sheets. The first thing to do is to check wether we can access Google Sheets (outside authentication may be needed), by running gs_ls() once.
+
+```{r}
+gs_ls() %>% is_tibble()
+```
+
+
+
+The keys to the appropriate Google Sheets are encrypted in the vault. To retrieve the data, we first retrieve the keys, then read the data, and then wrangle into a single dataset. 
+
+For reference, this is how the keys were encrypted:
+```{r, eval=FALSE, results='hide'}
+# key.s1_raw_stories = gs_ls() %>% 
+#   filter(grepl("Study 1: raw stories", sheet_title)) %>% 
+#   select(sheet_key) %>%
+#   first()
+# key.s1_edited_stories = gs_ls() %>% 
+#   filter(grepl("Study 1: edited stories", sheet_title)) %>% 
+#   select(sheet_key) %>%
+#   first()
+# encrypt(.name = SHEETS_VAULT, s1_raw_stories = key.s1_raw_stories)
+# encrypt(.name = SHEETS_VAULT, s1_edited_stories = key.s1_edited_stories)
+```
+
+Retrieve the keys: 
+```{r, results='hide'}
+key.s1_raw_stories = decrypt(SHEETS_VAULT)$s1_raw_stories
+key.s1_edited_stories = decrypt(SHEETS_VAULT)$s1_edited_stories
+```
+
+Retrieve raw stories:
+```{r, results='hide'}
+stories.raw = gs_read(gs_key(key.s1_raw_stories))
+```
+
+Retrieve edited stories:
+```{r, results='hide'}
+stories.edited = gs_read(gs_key(key.s1_edited_stories))
+```
+
+Now merge:
+```{r}
+stories.raw = stories.raw %>% 
+  select(id, raw = story)
+stories.edited = stories.edited %>%
+  select(id, edited = story)
+stories = stories.raw %>% 
+  left_join(stories.edited)
+str(stories, vec.len=1, nchar.max = 40)
+```
+Now we can add word counts to each row, and then calculate mean word counts (and respective SD's) for either raw or edited stories.
+```{r}
+wordcount = 
+  stories %>% 
+  mutate(raw.wc = str_count(raw), edited.wc = str_count(edited)) %>%
+  summarise(
+    mean(raw.wc), 
+    sd(raw.wc), 
+    mean(edited.wc), 
+    sd(edited.wc))
+wordcount
+```
+
