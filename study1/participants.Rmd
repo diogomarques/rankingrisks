@@ -1,0 +1,80 @@
+---
+title: "Sample summaries for 1st study participants"
+output: html_notebook
+---
+```{r "setup", include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "..")
+source("setup.R")
+```
+## Data retrieval
+Participant data, exported from LimeSurvey, is stored in Google Sheet. 
+
+First, check if Google Sheets are accessible, by running gs_ls() once.
+```{r}
+gs_ls() %>% is_tibble()
+```
+The key to the sheet is stored in the encrypted vault. Here it is how it was stored:
+```{r, eval=FALSE, results='hide'}
+#key = gs_ls() %>% 
+#  filter(grepl("1RUDyCr6C", sheet_key)) %>% 
+#  select(sheet_key) %>%
+#  first()
+# encrypt(.name = SHEETS_VAULT, s1_participants = key)
+
+```
+Retrieve the key and read the data:
+```{r, results='hide'}
+key = decrypt(SHEETS_VAULT)$s1_participants
+data = gs_read(gs_key(key))
+```
+Here's the collumns in the dataset:
+```{r}
+names(data)
+```
+## Sample summaries
+### Gender
+```{r}
+data %>% group_by(GENDER) %>% summarise(n()) 
+```
+### Age group
+```{r}
+data %>% group_by(AGE) %>% summarise(n()) 
+```
+### Country
+```{r}
+data %>% group_by(country) %>% summarise(n()) 
+```
+### Wave of data collection
+```{r}
+data %>% group_by(wave) %>% summarise(n())
+```
+### Data gathering period
+First and last answer submission data/time.
+```{r}
+data %>% summarise(first = min(submitdate), last = max(submitdate)) 
+```
+### Task completion time
+Mean time to complete the survey-answering task, in minutes, and respective SD.
+```{r}
+data %>% 
+  mutate(tasktime.m = interviewtime / 60) %>%
+  summarise(mean(tasktime.m), sd(tasktime.m))
+```
+### Compensation
+Mean hourly compensation, in GBP, and respective SD.
+```{r}
+data %>%
+  mutate(pph = 60 * 60 * compensation / interviewtime) %>%
+  summarise(mean(pph), sd(pph))
+```
+### Missed ACQs
+Instances where at least one attention check question was missed.
+```{r}
+data %>% 
+  filter(QUAL1 != "Yes" | QUAL2 != "Yes") %>%
+  mutate(tasktime.m = interviewtime / 60) %>%
+  select(id, wave, tasktime.m)
+```
+Interview times look normal. Relayed stories were manually checked, and although not the best, judged credible and informative. 
+

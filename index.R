@@ -10,14 +10,6 @@ source("study1/setup.R")
 # Run scripts from here
 stop("Do not source all files at once. Choose carefully you must.")
 
-# Compute participant statistics. Resuls go to \out".
-# Data source is again Google sheets, so same warnings apply.
-# gs_ls()
-source("study1/participants.R")
-
-# Populate RQDA database. No need to run this ever again.
-#source("study1/populate.R")
-
 # Load functions to save/restore encrypted RQDA database
 source("study1/db_encrypt.R")
 

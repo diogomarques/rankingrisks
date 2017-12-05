@@ -1,4 +1,7 @@
 # Populates RQDA database with collected data, stored in CSV file.
+# No need to run this ever again.
+
+
 stop("INTERATIVE - DO NOT SOURCE")
 
 library(readr)

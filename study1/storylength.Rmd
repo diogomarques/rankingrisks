@@ -14,8 +14,6 @@ Raw and edited versions of stories are stored in separate Google Sheets. The fir
 gs_ls() %>% is_tibble()
 ```
 
-
-
 The keys to the appropriate Google Sheets are encrypted in the vault. To retrieve the data, we first retrieve the keys, then read the data, and then wrangle into a single dataset. 
 
 For reference, this is how the keys were encrypted:
@@ -70,4 +68,3 @@ wordcount =
     sd(edited.wc))
 wordcount
 ```
-
