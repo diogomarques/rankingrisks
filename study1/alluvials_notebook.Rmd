@@ -1,0 +1,230 @@
+---
+title: "Visualizing the stories with alluvial diagrams"
+output: html_notebook
+---
+
+```{r include=FALSE}
+# load libraries
+library(RQDA)
+library(tidyverse)
+
+# extract data from RQDA
+openProject("study1.rqda")
+
+# code categories data
+code.categories = 
+  # get categories marked active from RQDA
+  RQDAQuery("select name, memo from codecat where status == 1") %>% 
+  # exclude subcats 
+  filter(!str_detect(name, "-"))
+
+# codings
+codings = 
+  # get codings from RQDA
+  getCodingTable() %>%
+  # extract category and code applying code name convention
+  mutate(category = str_extract(codename, "[a-z]*"),
+         code.subcode = str_extract(codename, "(?<=\\-)[:graph:]*"),
+         code = str_extract(codename, "(?<=\\-)[a-z]*"),
+         subcode = str_extract(code.subcode, "(?<=\\-)[a-z]*")
+         ) %>%
+  # clean-up
+  select(fid, category, code, subcode)  %>%
+  arrange(fid, category, code, subcode)
+
+closeProject()
+```
+
+These are notes on visualizing the story data with alluvial diagrams. This is a step in constructing a typology of instances of unauthorized access.
+
+As is expected by data collections through a narrative device, the code categories follow a temporal pattern. Centering stories around the instance or pattern of unauthorized access, the codes reflect three periods in time: *before*, *during*, and *after*.
+
+1. Before: code categories *relationshiptype* and *motivation*.
+2. During: code categories *opportunity*, *lock*, and *process*.
+3. After: code categories *knowledge*, *aftermath*, and *status*.
+
+These code categories are descibed as follows:
+
+```{r echo=TRUE}
+code.categories %>% 
+  transmute(Categories = str_c(name, ": ", memo))
+
+```
+
+For most code categories, only one code is selected per observational unit (i.e., story). However, for code categories *process* and *aftermath*, raters were free to not choose any code, or to choose many. Thus, each code in on of these categories can be seen as a category itself, with a binary value. This fact presents challenges to subsequent analysis.
+
+# Code distribution per category
+Objectives: 
+
+1. Visualize code frequencies for each category, and the relationships.
+2. Visualize relationships between codes of several categories.
+
+We start with the codings data, which looks like this:
+```{r echo=TRUE}
+head(codings)
+```
+
+```{r echo=TRUE}
+str(codings)
+```
+
+The variable *fid* (file identifier) refers to the observational units (each *fid* is a story). 
+
+In multi-code categories, such as *process*, fids may have been attributed multiple subcodes of the same code. To analyze at the code level, where only category and code are needed, only one instance of the code is needed.
+
+```{r echo=TRUE}
+codings.wo.subcodes =
+  codings %>% 
+  select(fid, category, code) %>%
+  distinct()
+str(codings.wo.subcodes)
+```
+
+
+
+## With [alluvial](https://CRAN.R-project.org/package=alluvial)
+First, an attempt at creating an alluvial using the "alluvial" package. This package uses standard plotting. 
+
+```{r echo=TRUE}
+library(alluvial)
+```
+
+This library requires wide frequency tables to make alluvials. Each line contains the frequency of a given combinations of codes, with each collumn containing 1 code per category. Thus, it is not trivial to include codes in the multi-code categories. For now, they will be excluded.
+
+```{r echo=TRUE}
+alluvial.data = 
+  codings.wo.subcodes %>% 
+  # exclude categories
+  filter(category != "process" & category != "aftermath") %>%
+  # spread to wide format
+  spread(category, code) %>%
+  # obtain frequencies
+  select(-fid) %>%
+  group_by_all() %>%
+  summarise(freq = n()) %>%
+  ungroup() %>%
+  # order by timeline
+  select(relationshiptype, motivation, opportunity, lock, 
+         knowledge, status, freq)
+head(alluvial.data)
+
+```
+
+Here is the default alluvial representation:
+
+```{r echo=TRUE}
+alluvial(
+  alluvial.data[,1:6],
+  freq = alluvial.data$freq
+)
+```
+
+The graph conveys the correct code frequencies for each category, limited to the single-choice categories. However, the relationships between codes are difficult to make sense of.
+
+Using this package, the input is a contigency table, and the alluvia can be followed from beggining to end, their thickness representing frequency. The graph would be easier to understand if alluvials only represented pairwise relationships between adjoining categories, i.e. pairwise "of which" relationships. 
+
+Even with these constraints, there is some room to improve on the graph, by adding colors and tinkering with ordering. 
+
+```{r}
+# Create orderings
+alluvial.data = 
+  alluvial.data %>% 
+  mutate(
+    relationshiptype.order = 
+      case_when(
+        relationshiptype == "intimate" ~ 1,
+        relationshiptype == "nonintimate" ~ 2,
+        relationshiptype == "unspecified" ~ 3,
+        TRUE ~ 0
+        ),
+    motivation.order = 
+      case_when(
+        motivation == "control" ~ 1,
+        motivation == "exploit" ~ 2,
+        motivation == "prank" ~ 3,
+        motivation == "convenience" ~ 4,
+        motivation == "accidental" ~ 5,
+        motivation == "unspecified" ~ 6,
+        TRUE ~ 0
+        ),
+    opportunity.order = 
+      case_when(
+        opportunity == "unattended" ~ 1,
+        opportunity == "deception" ~ 2,
+        opportunity == "secondarydevice" ~ 3,
+        opportunity == "unspecified" ~ 4,
+        TRUE ~0
+      )
+  ) 
+alluvial(
+  alluvial.data[,1:6],
+  freq = alluvial.data$freq,
+  border = alluvial.data$relationshiptype.order + 1,
+  col = alluvial.data$relationshiptype.order + 1,
+  ordering = list(
+    alluvial.data$relationshiptype.order,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL
+  ),
+  gap.width = .1,
+  cex = .7,
+  blocks = T
+  #alpha = 0.7,
+)
+```
+
+
+Code for the previous graph is very hacky. The vertical ordering of levels is an experimental feature, and I found no way of properly ordering past the first category. 
+
+Conclusion: objective 1, of representing code frequencies, is partially accomplished, by the stacked barplot format of the alluvial nodes. However, relationships of adjoining codes are difficult to discern. Additionally, there is very little flexibility for tinkering with the basic plot.
+
+## With [ggalluvial](https://CRAN.R-project.org/package=ggalluvial)
+
+> Ongoing
+
+First attempt, using the same data.
+```{r}
+library(ggalluvial)
+alluvial.data %>% 
+  ggplot(aes(weight = freq, 
+             axis1 = relationshiptype, 
+             axis2 = motivation,
+             axis3 = opportunity,
+             axis4 = lock,
+             axis5 = knowledge,
+             axis6 = status)) +
+  geom_alluvium(aes(fill = motivation), width = 1/12) +
+  geom_stratum(width = 1/12, fill = "black", color = "grey") +
+  geom_label(stat = "stratum", label.strata = TRUE) +
+  scale_x_continuous(breaks = 1:6, labels = c(names(data))[1:6]) + #, labels = names(data)) +
+  ggtitle("Story codings alluvial")
+
+```
+
+
+```{r}
+# Explore transformations is for multi-code cats, such
+# as creating new combined levels. For instance:
+# aftermath-bothnegative - 5
+# aftermath-bothpositive - 1 *
+# aftermath-activemixed - 1 *
+# aftermath-activemixedpassivenegative - 1 *
+# * possibly combine these into "other"
+# For "process" codes, all combinations in data are
+# snooping + other. 
+# + tampering - 3
+# + exfiltration - 3
+# + impersonation - 1
+# It might make more sense, in that case,to always select 
+# the least common code.
+# 
+#
+```
+
+
+# Code relationships within moments
+
+
