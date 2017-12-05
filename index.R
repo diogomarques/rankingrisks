@@ -12,10 +12,12 @@ source("study1/populate.R")
 # Load functions to save/restore encrypted RQDA database
 source("study1/db_encrypt.R")
 
-# TODO: move the following to codebooks
-
-# Compute code frequencies to tables in out/.
-source("study1/codefrequency.R")
+# Next scripts used to reach round 1 consensus. No use in 
+# converting them to notebooks. Re-create output structure
+# to run them again.
+OUT_CSV_ROUND1_CONSENSUS =    "out/s1_codings_round1.csv"
+OUT_CSV_AGREEMENT_R1 =        "out/s1_agreement_initial.csv"
+dir.create("out", showWarnings = F)
 
 # Merge RQDA codings, and 2nd rater codings from Google Sheet
 # into useful tables, needed for subsequent analysis.
