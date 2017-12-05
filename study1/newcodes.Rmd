@@ -1,0 +1,123 @@
+---
+title: "Analysis of codebook growth"
+output: html_notebook
+---
+```{r "setup", include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "..")
+source("setup.R")
+library(RQDA)
+```
+## Preparation
+The data for this analysis are codings stored on the RQDA database. We need to open the project, retrieve the data, than tidy it up.
+
+Retrieve to *codings* dataset:
+```{r}
+openProject(RQDA_PROJECT_PATH)
+codings = getCodingTable()
+closeProject()
+str(codings)
+```
+Tidy-up:
+
+> TODO: this will break with new data
+
+```{r}
+# create matrix of cat / code / subcode
+codings.matrix = 
+  str_split_fixed(codings$codename, "-", 3) %>% 
+  as_data_frame()
+colnames(codings.matrix) = 
+  c("category", "code", "subcode")
+# bind them
+codings = 
+  codings %>% 
+  bind_cols(codings.matrix)
+# add wave 
+codings = 
+  codings %>% 
+  mutate(wave = case_when(
+                fid <= 35 & fid > 25  ~ "Wave 3",
+                fid <= 25 & fid > 13  ~ "Wave 2",
+                fid <= 13 & fid > 3  ~ "Wave 1", 
+                fid <= 3 ~ "Pilot"
+                )
+  )
+# tidy-up
+codings = 
+  codings %>% 
+  mutate(category.code = paste(category, code, sep="-"),
+         category.code.subcode = codename) %>%  
+  select(fid, wave, category.code, category.code.subcode)
+str(codings)
+```
+(This is a bit ugly, but works. See alluvials notebook for more elegant approach.)
+
+## New codes / subcodes per wave
+### Codes
+```{r}
+codings %>% 
+  select(fid, wave, category.code) %>% 
+  group_by(category.code) %>% 
+  summarise_all(min) %>% 
+  arrange(fid) %>% 
+  ungroup() 
+```
+### Subcodes
+```{r}
+codings %>% 
+  select(fid, wave, category.code.subcode) %>% 
+  group_by(category.code.subcode) %>% 
+  summarise_all(min) %>% 
+  arrange(fid) %>% 
+  ungroup() 
+```
+### Plots
+(Plotting code is messy, and not shown here. See Rmd for details.)
+
+> TODO: this will break with new data
+
+```{r, include=F}
+# helpers to calculate, for each file, codes/subcodes used so far
+cum.subcodes = function(curfid, data) {
+  data %>% filter(fid <= curfid) %>% summarise(n_distinct(category.code.subcode)) %>% first()
+}
+cum.codes = function(curfid, data) {
+  data %>% filter(fid <= curfid) %>% summarise(n_distinct(category.code)) %>% first()
+}
+
+# get tables of cummulative codes/subcodes
+subcodes = codings %>% distinct(fid) %>% rowwise(.) %>% 
+  mutate(numsubcodes = cum.subcodes(fid, codings)) %>% arrange(fid)
+codes = codings %>% distinct(fid) %>% rowwise(.) %>% 
+  mutate(numcodes = cum.codes(fid, codings)) %>% arrange(fid)
+
+# plot codebook growth
+plotcodes = function(data, ylab ="", main = "", labeloffset = 0.5) {
+  data %>% plot(.,  
+                    xlab = "Story", 
+                    ylab= ylab, 
+                    main = main,
+                    pch = 1
+                )
+  text(data[[1]], data[[2]]+labeloffset, labels = data[[2]], cex = 0.6, offset = 10)
+  
+  # TODO: tidy this up
+  text(x = mean(c(0,3.5)), y = 15, labels = "Pilot")
+  abline(v = 3.5)
+  text(x = mean(c(3.5,13.5)), y = 15, labels = "Wave1")
+  abline(v = 13.5)
+  text(x = mean(c(13.5,25.5)), y = 15, labels = "Wave2")
+  abline(v = 25.5)
+  text(x = mean(c(25.5, 35)), y = 15, labels = "Wave3")
+}
+
+```
+```{r}
+plotcodes(subcodes, ylab= "# codes / subcodes used", "Cummulative codes / subcodes", labeloffset = 1)
+```
+```{r}
+plotcodes(codes, ylab= "# codes used", "Cummulative codes")
+```
+
+

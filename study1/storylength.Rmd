@@ -6,6 +6,7 @@ output: html_notebook
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_knit$set(root.dir = "..")
 source("setup.R")
+library(googlesheets)
 ```
 
 Raw and edited versions of stories are stored in separate Google Sheets. The first thing to do is to check wether we can access Google Sheets (outside authentication may be needed), by running gs_ls() once.

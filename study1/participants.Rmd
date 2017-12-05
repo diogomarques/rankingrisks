@@ -6,6 +6,7 @@ output: html_notebook
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_knit$set(root.dir = "..")
 source("setup.R")
+library(googlesheets)
 ```
 ## Data retrieval
 Participant data, exported from LimeSurvey, is stored in Google Sheet. 

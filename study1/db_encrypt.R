@@ -25,30 +25,3 @@ restoreProjectFromVault = function(overwrite = F) {
     readr::write_file(x = saveddb, path = RQDA_PROJECT_PATH)
   }
 }
-
-stop("saveProjectToVault and restoreProjectFromVault loaded
-     to env. No need to continue.")
-# fake function just to isolate this play code 
-
-playground = function() {
-
-# TODO: Save all raw data files to vault
-saveRawDataToVault = function() {
-  # check that there is a raw folder with files to save
-  if(dir.exists(RAW_DATA_DIR)) {
-  } else {
-    warning("No \raw folder")
-  }
-  
-  
-}
-if(dir.exists(RAW_DATA_DIR)) {
-  files = list.files(RAW_DATA_DIR)
-  # TODO: check if there are any files
-  filespath = paste0("raw/", files)
-  contents = sapply(filespath, read_file)
-  valuables = data_frame(vfile = files, vcontent = contents)
-  apply(valuables, 1, function(x) encrypt(.name = x[1], x[2]))
-}
-
-}

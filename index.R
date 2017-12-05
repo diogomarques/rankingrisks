@@ -1,20 +1,18 @@
 ##
-## Index
+## Index of R scripts. Remaining analysis in separate R Notebooks.
 ##
-## TODO: get out of this global variable -> script -> 
-# clean-up -> outfile workflow, and move to something 
-# like a notebook.
+stop("Do not source this file.")
 
+## Setup libraries and global variables for notebooks.
 source("study1/setup.R")
 
-# Run scripts from here
-stop("Do not source all files at once. Choose carefully you must.")
+# Populate RQDA database. No need to run this ever again.
+source("study1/populate.R")
 
 # Load functions to save/restore encrypted RQDA database
 source("study1/db_encrypt.R")
 
-# Analyze codebook growth. Outputs tables and graphs to out/.
-source("study1/newcodes.R")
+# TODO: move the following to codebooks
 
 # Compute code frequencies to tables in out/.
 source("study1/codefrequency.R")
