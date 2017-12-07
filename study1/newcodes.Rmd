@@ -9,31 +9,14 @@ source("setup.R")
 library(RQDA)
 ```
 ## Preparation
-The data for this analysis are codings stored on the RQDA database. We need to open the project, retrieve the data, than tidy it up.
-
-Retrieve to *codings* dataset:
+Retrieve to *codings* dataset from RQDA:
 ```{r}
-openProject(RQDA_PROJECT_PATH)
-codings = getCodingTable()
-closeProject()
-str(codings)
+codings = getCodes()
+str(codings, vec.len = 1, nchar.max = 80)
 ```
-Tidy-up:
-
-> TODO: this will break with new data
+Add collumn indicating wave of data gathering:
 
 ```{r}
-# create matrix of cat / code / subcode
-codings.matrix = 
-  str_split_fixed(codings$codename, "-", 3) %>% 
-  as_data_frame()
-colnames(codings.matrix) = 
-  c("category", "code", "subcode")
-# bind them
-codings = 
-  codings %>% 
-  bind_cols(codings.matrix)
-# add wave 
 codings = 
   codings %>% 
   mutate(wave = case_when(
@@ -43,22 +26,17 @@ codings =
                 fid <= 3 ~ "Pilot"
                 )
   )
-# tidy-up
-codings = 
-  codings %>% 
-  mutate(category.code = paste(category, code, sep="-"),
-         category.code.subcode = codename) %>%  
-  select(fid, wave, category.code, category.code.subcode)
-str(codings)
+str(codings, vec.len = 1, nchar.max = 80)  
 ```
-(This is a bit ugly, but works. See alluvials notebook for more elegant approach.)
+
+> TODO: this will break with new data. Should retrieve wave information from data source, and not hard code it (see participants notebook).
 
 ## New codes / subcodes per wave
 ### Codes
 ```{r}
 codings %>% 
-  select(fid, wave, category.code) %>% 
-  group_by(category.code) %>% 
+  select(fid, wave, category, code) %>% 
+  group_by(category, code) %>% 
   summarise_all(min) %>% 
   arrange(fid) %>% 
   ungroup() 
@@ -66,8 +44,8 @@ codings %>%
 ### Subcodes
 ```{r}
 codings %>% 
-  select(fid, wave, category.code.subcode) %>% 
-  group_by(category.code.subcode) %>% 
+  select(fid, wave, codename) %>% 
+  group_by(codename) %>% 
   summarise_all(min) %>% 
   arrange(fid) %>% 
   ungroup() 
@@ -75,7 +53,7 @@ codings %>%
 ### Plots
 (Plotting code is messy, and not shown here. See Rmd for details.)
 
-> TODO: this will break with new data
+> TODO: plots will also break with new data
 
 ```{r, include=F}
 # helpers to calculate, for each file, codes/subcodes used so far

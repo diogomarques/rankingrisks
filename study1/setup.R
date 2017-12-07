@@ -16,11 +16,13 @@ SHEETS_VAULT = "sheets"
 # category, code, subcode, ans respective descriptions
 getCodes = function(database = RQDA_PROJECT_PATH) {
   # retrieve data from DB
+  require(RQDA)
   RQDA::openProject(database)
   codings = RQDA::getCodingTable()
   category = RQDA::RQDAQuery("select name, memo from codecat where status = 1")
   code = RQDA::RQDAQuery("select name, memo from freecode where status = 1")
   RQDA::closeProject()
+  detach("package:RQDA")
   
   # clean-up dara
   codings = 

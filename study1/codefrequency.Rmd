@@ -6,60 +6,37 @@ output: html_notebook
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_knit$set(root.dir = "..")
 source("setup.R")
-library(RQDA)
+codings = getCodes()
 ```
 ## Preparation
 The data is the RQDA codings. To start, retrieve codings and descriptions, and tidy-up.
 ```{r}
-openProject(RQDA_PROJECT_PATH)
-
-# get base tables fromRQDA
-codings = getCodingTable()
-codecat = RQDAQuery("select * from codecat")
-codecat = codecat %>% filter(status == 1)
-code = RQDAQuery("select * from freecode")
-code = code %>% filter(status == 1)
-closeProject()
-
-# create matrix of cat / code / subcode
-codings.matrix = str_split_fixed(codings$codename, "-", 3) %>% as_data_frame()
-colnames(codings.matrix) = c("category", "code", "subcode")
-
-# bind them
-codings = codings %>% bind_cols(codings.matrix)
-# filter out irrelevant data
-codings = codings %>% select(codename, category, code, subcode, fid)
-
-str(codings)
+str(codings, vec.len = 1, nchar.max = 80)
 ```
-
-> TODO: Retrieving codings & categories from RQDA is repetitive. Make scripts.
 
 ## Code frequency tables
 ### Subcode frequency (with descriptions)
 ```{r}
 codings %>% 
-  group_by(codename, category, code, subcode) %>% 
-  summarise(n = n()) %>% 
-  # add memos
-  left_join(code, by=c("codename" = "name")) %>% 
-  ungroup() %>%
-  select(n, codename, memo)
+  group_by(codename) %>% 
+  summarise(n = n(), description = first(description)) %>% 
+  select(n, codename, description)
 
 ```
 ### Code frequency
 ```{r}
 codings %>% 
   group_by(category, code) %>% 
-  summarise(n = n())
+  summarise(n = n()) %>%
+  mutate(cat.code = paste(category, "-", code, sep = "")) %>%
+  ungroup() %>%
+  select(n, cat.code)
 ```
 ### Category frequency
 ```{r}
 codings %>% 
   group_by(category) %>% 
-  summarise(n = n()) %>% 
-  # add memo
-  left_join(codecat, by=c("category" = "name")) %>%
+  summarise(n = n(), memo = first(category.desc)) %>% 
   select(n, category, memo)
 ```
 
