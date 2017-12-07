@@ -1,87 +1,150 @@
 ---
-title: "Visualizing the stories with alluvial diagrams"
+title: "Visualizing codings with diagrams"
 output: html_notebook
 ---
-
-```{r include=FALSE}
-# load libraries
-library(RQDA)
-library(tidyverse)
-
-# extract data from RQDA
-openProject("study1.rqda")
-
-# code categories data
-code.categories = 
-  # get categories marked active from RQDA
-  RQDAQuery("select name, memo from codecat where status == 1") %>% 
-  # exclude subcats 
-  filter(!str_detect(name, "-"))
-
-# codings
-codings = 
-  # get codings from RQDA
-  getCodingTable() %>%
-  # extract category and code applying code name convention
-  mutate(category = str_extract(codename, "[a-z]*"),
-         code.subcode = str_extract(codename, "(?<=\\-)[:graph:]*"),
-         code = str_extract(codename, "(?<=\\-)[a-z]*"),
-         subcode = str_extract(code.subcode, "(?<=\\-)[a-z]*")
-         ) %>%
-  # clean-up
-  select(fid, category, code, subcode)  %>%
-  arrange(fid, category, code, subcode)
-
-closeProject()
+```{r "setup", include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "..")
+source("setup.R")
+codings = getCodes()
 ```
 
-These are notes on visualizing the story data with alluvial diagrams. This is a step in constructing a typology of instances of unauthorized access.
+These are notes on visualizing codes with diagrams. This is a step in constructing a typology of instances of unauthorized access.
 
+# Objectives
+The objectives of this analysis are as follows:
+
+1. Visualize code frequencies in each category.
+2. Visualize relationships between codes of different categories.
+
+# Issues and observations prior to analysis
+## Temporal pattern
 As is expected by data collections through a narrative device, the code categories follow a temporal pattern. Centering stories around the instance or pattern of unauthorized access, the codes reflect three periods in time: *before*, *during*, and *after*.
 
 1. Before: code categories *relationshiptype* and *motivation*.
 2. During: code categories *opportunity*, *lock*, and *process*.
 3. After: code categories *knowledge*, *aftermath*, and *status*.
 
-These code categories are descibed as follows:
+See the [codefrequency](codefrequency.nb.html) notebook for descriptions of categories. 
 
-```{r echo=TRUE}
-code.categories %>% 
-  transmute(Categories = str_c(name, ": ", memo))
+> TODO: represent temporal pattern
 
+## Level of analysis
+For this analysis, the focus will be on codes, *not* subcodes. 
+
+The codings data looks like this:
+```{r}
+str(codings, vec.len = 1, ncharmax = 80)
 ```
 
-For most code categories, only one code is selected per observational unit (i.e., story). However, for code categories *process* and *aftermath*, raters were free to not choose any code, or to choose many. Thus, each code in on of these categories can be seen as a category itself, with a binary value. This fact presents challenges to subsequent analysis.
+To analyze at the code level, where only category and code are needed, only one instance of code per story is needed.
 
-# Code distribution per category
-Objectives: 
-
-1. Visualize code frequencies for each category, and the relationships.
-2. Visualize relationships between codes of several categories.
-
-We start with the codings data, which looks like this:
-```{r echo=TRUE}
-head(codings)
-```
-
-```{r echo=TRUE}
-str(codings)
-```
-
-The variable *fid* (file identifier) refers to the observational units (each *fid* is a story). 
-
-In multi-code categories, such as *process*, fids may have been attributed multiple subcodes of the same code. To analyze at the code level, where only category and code are needed, only one instance of the code is needed.
-
-```{r echo=TRUE}
+```{r}
 codings.wo.subcodes =
   codings %>% 
   select(fid, category, code) %>%
   distinct()
-str(codings.wo.subcodes)
+str(codings.wo.subcodes, vec.len = 1, ncharmax = 80)
 ```
 
+## Dealing with multi-code categories
+For most code categories, only one code is selected per observational unit (i.e., fid). However, for code categories *process* and *aftermath*, raters were free to not choose any code, or to choose many. Thus, each code in on of these categories can be seen as a category itself, with a binary value. This fact presents challenges to subsequent analysis, which will often require exactly 1 value per observational unit.
+
+To be able to proceed with exploring visualizations, an additional dataset is created limited to the remaining categories. To easily conform with frequency analysis, categories are spread to collumns.
+
+```{r echo=TRUE}
+data.wide = 
+  codings.wo.subcodes %>% 
+  filter(category != "process" & 
+           category != "aftermath") %>%
+  spread(category, code) %>%
+  # order by timeline
+  select(fid, relationshiptype, motivation, opportunity, lock, knowledge, status)
+str(data.wide, vec.len = 2)
+```
+
+Another common data representation used in visualizations is as a frequency table, where each line contains the frequency of a given combinations of codes.
+
+```{r}
+data.wide.freq =
+  data.wide %>%
+  select(-fid) %>%
+  group_by_all() %>%
+  summarise(freq = n()) %>%
+  ungroup() %>%
+  arrange(desc(freq))
+str(data.wide.freq, vec.len = 3)
+```
+
+### Transformation
+
+> TODO: revise when additional data comes in
+
+Another approach that could be considered would be to transform the data in multi-code categories, so that they comply with the 1 observation per story format.
+
+For both multi-code categories, cases where raters did not select any code can be trivially transformed in a "unspecified"-type level.
+
+The problematic cases are those for which there was more than one coding. 
+
+For aftermath, these are the cases with multiple codings:
+
+```{r}
+codings.wo.subcodes %>%
+  select(fid, category, code) %>%
+  filter(category == "aftermath") %>%
+  arrange(code) %>%
+  group_by(fid) %>%
+  nest(code) %>%
+  mutate(n = purrr::map_int(data, nrow),
+         codes = purrr::map(data, unlist),
+         codelist = purrr::map_chr(codes, paste, collapse = ", ")) %>%
+  filter(n > 1) %>%
+  select(fid, codelist) %>%
+  arrange(codelist)
+```
+There appear to be the following patterns:
+
+- Active subject has mixed feelings
+- Both subjects have negative feelings
+
+There is one instance which does not conform to this patter, which could be labeled as "others".
+
+For process, these are the cases with multiple codings:
+
+```{r}
+codings.wo.subcodes %>%
+  select(fid, category, code) %>%
+  filter(category == "process") %>%
+  arrange(code) %>%
+  group_by(fid) %>%
+  nest(code) %>%
+  mutate(n = purrr::map_int(data, nrow),
+         codes = purrr::map(data, unlist),
+         codelist = purrr::map_chr(codes, paste, collapse = ", ")) %>%
+  filter(n > 1) %>%
+  select(fid, codelist) %>%
+  arrange(codelist)
+```
+It appears that all combinations include snooping, plus one other kind of code.
+
+However, it is not true that those other codes subsume "snooping". They sometimes occur on their own:
+
+```{r}
+snooping.fids =
+  codings.wo.subcodes %>% 
+  filter(category == "process" & code == "snooping") %>%
+  .$fid
+
+codings.wo.subcodes %>%
+  filter(category == "process" &
+           ! fid %in% snooping.fids)
+
+```
+
+A rule for transformation could be always choosing the other code. In that case, any selection of on of the other codes should be described as *possibly* subsumming "snooping". One disadvantage to this approach would be to possibly distort an analysis of the relationshiip of "snooping" codes and other codes.
 
 
+# Alluvial diagrams 
 ## With [alluvial](https://CRAN.R-project.org/package=alluvial)
 First, an attempt at creating an alluvial using the "alluvial" package. This package uses standard plotting. 
 
@@ -89,26 +152,7 @@ First, an attempt at creating an alluvial using the "alluvial" package. This pac
 library(alluvial)
 ```
 
-This library requires wide frequency tables to make alluvials. Each line contains the frequency of a given combinations of codes, with each collumn containing 1 code per category. Thus, it is not trivial to include codes in the multi-code categories. For now, they will be excluded.
 
-```{r echo=TRUE}
-alluvial.data = 
-  codings.wo.subcodes %>% 
-  # exclude categories
-  filter(category != "process" & category != "aftermath") %>%
-  # spread to wide format
-  spread(category, code) %>%
-  # obtain frequencies
-  select(-fid) %>%
-  group_by_all() %>%
-  summarise(freq = n()) %>%
-  ungroup() %>%
-  # order by timeline
-  select(relationshiptype, motivation, opportunity, lock, 
-         knowledge, status, freq)
-head(alluvial.data)
-
-```
 
 Here is the default alluvial representation:
 
@@ -202,26 +246,6 @@ alluvial.data %>%
   scale_x_continuous(breaks = 1:6, labels = c(names(data))[1:6]) + #, labels = names(data)) +
   ggtitle("Story codings alluvial")
 
-```
-
-
-```{r}
-# Explore transformations is for multi-code cats, such
-# as creating new combined levels. For instance:
-# aftermath-bothnegative - 5
-# aftermath-bothpositive - 1 *
-# aftermath-activemixed - 1 *
-# aftermath-activemixedpassivenegative - 1 *
-# * possibly combine these into "other"
-# For "process" codes, all combinations in data are
-# snooping + other. 
-# + tampering - 3
-# + exfiltration - 3
-# + impersonation - 1
-# It might make more sense, in that case,to always select 
-# the least common code.
-# 
-#
 ```
 
 
