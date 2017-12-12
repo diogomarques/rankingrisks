@@ -4,6 +4,8 @@
 RQDA_PROJECT_PATH = "data-raw/study1.rqda"
 SHEETS_VAULT = "sheets"
 
+## TODO: also centralize retrieval from GSheets here.
+
 #' Obtain all codings per case from the RQDA database, annotated
 #' with code categories, codes, subcodes, and respective descriptions
 #'

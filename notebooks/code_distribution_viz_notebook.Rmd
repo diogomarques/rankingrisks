@@ -1,13 +1,16 @@
 ---
 title: "Visualizing codings with diagrams"
-output: html_notebook
+output:
+  pdf_document: default
+  html_notebook: default
 ---
 ```{r "setup", include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+load("../data/codings.rda")
 require(tidyverse)
 ```
 
-These are notes on visualizing codes with diagrams. This is a step in constructing a typology of instances of unauthorized access.
+These are notes on visualizing the codings structure with diagrams. This is a step in constructing a typology of instances of unauthorized access.
 
 # Objectives
 The objectives of this analysis are as follows:
@@ -25,14 +28,53 @@ As is expected by data collections through a narrative device, the code categori
 
 See the [codefrequency](codefrequency.nb.html) notebook for descriptions of categories. 
 
-> TODO: represent temporal pattern
+```{r}
+require(ggraph)
+
+categories =
+  data_frame(
+    names = c(
+      
+      "opportunity",
+      "lock",
+      "process",
+      "knowledge",
+      "aftermath",
+      "status",
+      "relationshiptype",
+      "motivation"
+    )
+  )
+
+relations = tribble(
+  ~from, ~to,
+  "relationshiptype", "motivation",
+  "motivation", "opportunity",
+  "opportunity", "lock",
+  "lock", "process",
+  "process", "knowledge",
+  "knowledge","aftermath",
+  "aftermath","status"
+) %>% 
+  as_data_frame()
+
+g = graph_from_data_frame(relations, directed = T, vertices = categories)
+
+ggraph(g, layout = "circle") +
+  geom_edge_link(arrow = arrow(length = unit(2, 'mm')), 
+                 end_cap = circle(10, 'mm')) + 
+  geom_node_label(aes(label = name),size = 3) +
+  theme_graph()
+
+```
+
+> TODO: not satisfied with this. try other timeline visualizations.
 
 ## Level of analysis
 For this analysis, the focus will be on codes, *not* subcodes. 
 
 The codings data looks like this:
 ```{r}
-load("../data/codings.rda")
 str(codings, vec.len = 1, ncharmax = 80)
 ```
 
