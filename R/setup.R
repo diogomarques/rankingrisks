@@ -6,8 +6,3 @@
 library(secure)
 library(tidyverse)
 library(glue)
-
-# All global variables
-RQDA_PROJECT_PATH = "data-raw/study1.rqda"
-RQDA_VAULT_NAME = "study1"
-SHEETS_VAULT = "sheets"

@@ -1,5 +1,9 @@
 ## Functions to retrieve data from raw sources, and save them to /data.
 
+# All global variables
+RQDA_PROJECT_PATH = "data-raw/study1.rqda"
+SHEETS_VAULT = "sheets"
+
 #' Obtain all codings per case from the RQDA database, annotated
 #' with code categories, codes, subcodes, and respective descriptions
 #'
@@ -12,7 +16,8 @@
 #' @examples
 #' retrieve_rqda_codings("data-raw/study1.rqda")
 #' retrieve_rqda_codings("data-raw/study1.rqda", save_to_data = T)
-retrieve_rqda_codings = function(rqda_db, save_to_data = FALSE) {
+retrieve_rqda_codings = function(rqda_db = RQDA_PROJECT_PATH
+                                 , save_to_data = FALSE) {
   require(tidyverse)
   require(RQDA)
   

@@ -4,13 +4,12 @@ output: html_notebook
 ---
 ```{r "setup", include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = "..")
-source("setup.R")
-codings = getCodes()
+require(tidyverse)
 ```
 ## Preparation
-The data is the RQDA codings. To start, retrieve codings and descriptions, and tidy-up.
+Retrieve codings and descriptions.
 ```{r}
+load("../data/codings.rda")
 str(codings, vec.len = 1, nchar.max = 80)
 ```
 

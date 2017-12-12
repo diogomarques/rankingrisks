@@ -4,6 +4,9 @@
 # encrypted data.
 
 # TODO: use args as variables instead of globals
+RQDA_VAULT_NAME = "study1"
+RQDA_PROJECT_PATH = "data-raw/study1.rqda"
+
 
 # Saves RQDA project to secure vault.
 saveProjectToVault = function() {

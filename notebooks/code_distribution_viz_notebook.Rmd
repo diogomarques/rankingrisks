@@ -4,9 +4,7 @@ output: html_notebook
 ---
 ```{r "setup", include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = "..")
-source("setup.R")
-codings = getCodes()
+require(tidyverse)
 ```
 
 These are notes on visualizing codes with diagrams. This is a step in constructing a typology of instances of unauthorized access.
@@ -34,6 +32,7 @@ For this analysis, the focus will be on codes, *not* subcodes.
 
 The codings data looks like this:
 ```{r}
+load("../data/codings.rda")
 str(codings, vec.len = 1, ncharmax = 80)
 ```
 
