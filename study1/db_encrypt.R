@@ -3,6 +3,8 @@
 # These helpers, and .gitignore, make it easier to only commit 
 # encrypted data.
 
+# TODO: use args as variables instead of globals
+
 # Saves RQDA project to secure vault.
 saveProjectToVault = function() {
   # read database
