@@ -53,7 +53,7 @@ retrieve_rqda_codings = function(rqda_db = RQDA_PROJECT_PATH
     rename(category.desc = memo)
   
   # save
-  if(save == TRUE)
+  if(save_to_data == TRUE)
     save(codings, file = file.path("data", "codings.rda"))
   
   # return value
@@ -150,16 +150,25 @@ retrieve_sheet_data = function(sheet_name,
 #' which contains the "wave" variable 
 #' @param vault A hadley/secure vault containing keys to Google
 #' Sheet with relevant data.
+#' @param save_to_data Should the data be serialized to \data?
 #'
 #' @return a tibble of wave identifiers for observational unit
 #' @export
 #'
 #' @examples
 retrieve_waves = function(vault = SHEETS_VAULT,
-                          sheet_name = "s1_participants") {
-  data = retrieve_sheet_data(sheet_name = sheet_name,
-                             vault = vault)
-  data %>%
-    transmute(fid = id,
-              wave = wave)
+                          sheet_name = "s1_participants",
+                          save_to_data = FALSE) {
+  data =
+    retrieve_sheet_data(sheet_name = sheet_name,
+                        vault = vault)
+  waves = 
+    data %>%
+    transmute(fid = id, wave = wave)
+  
+  # save
+  if(save_to_data == TRUE)
+    save(waves, file = file.path("data", "waves.rda"))
+  
+  waves
 }
