@@ -1,4 +1,4 @@
-## Functions to retrieve data from raw sources, and save them to /data.
+## Functions to retrieve data from raw sources.
 
 # All global variables
 RQDA_PROJECT_PATH = "data-raw/study1.rqda"
@@ -141,4 +141,25 @@ retrieve_sheet_data = function(sheet_name,
   key %>% 
     gs_key() %>% # register
     gs_read() # read
+}
+
+#' Retrieve the wave identifier for each observational unit from
+#' a Google Sheet, whose key is stored in the encrypted vault.
+#'
+#' @param sheet_name the name of the sheet names(get_sheet_keys) 
+#' which contains the "wave" variable 
+#' @param vault A hadley/secure vault containing keys to Google
+#' Sheet with relevant data.
+#'
+#' @return a tibble of wave identifiers for observational unit
+#' @export
+#'
+#' @examples
+retrieve_waves = function(vault = SHEETS_VAULT,
+                          sheet_name = "s1_participants") {
+  data = retrieve_sheet_data(sheet_name = sheet_name,
+                             vault = vault)
+  data %>%
+    transmute(fid = id,
+              wave = wave)
 }
