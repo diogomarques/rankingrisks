@@ -9,20 +9,11 @@ require(tidyverse)
 ## Preparation
 Load *codings* dataset and add collumn indicating wave of data gathering.
 
-> TODO: this will break with new data. Should retrieve wave information from data source, and not hard code it (see participants notebook).
-
 ```{r}
 load("../data/codings.rda")
-codings =
-  codings %>%
-  mutate(
-    wave = case_when(
-      fid <= 35 & fid > 25  ~ "Wave 3",
-      fid <= 25 & fid > 13  ~ "Wave 2",
-      fid <= 13 & fid > 3  ~ "Wave 1",
-      fid <= 3 ~ "Pilot"
-    )
-  )
+load("../data/waves.rda")
+
+codings = codings %>% full_join(waves, by = "fid")
 str(codings, vec.len = 1, nchar.max = 80)  
 ```
 
@@ -48,8 +39,6 @@ codings %>%
 ### Plots
 (Plotting code is messy, and not shown here. See Rmd for details.)
 
-> TODO: plots will also break with new data
-
 ```{r, include=F}
 # helpers to calculate, for each file, codes/subcodes used so far
 cum.subcodes = function(curfid, data) {
@@ -72,21 +61,23 @@ subcodes =
   distinct(fid) %>% 
   rowwise(.) %>% 
   mutate(numsubcodes = cum.subcodes(fid, codings)) %>% 
-  arrange(fid)
+  arrange(fid) %>%
+  left_join(waves, by = "fid")
 
 codes = 
   codings %>% 
   distinct(fid) %>% 
   rowwise(.) %>% 
   mutate(numcodes = cum.codes(fid, codings)) %>% 
-  arrange(fid)
+  arrange(fid) %>%
+  left_join(waves, by = "fid")
 
 # plot codebook growth
 plotcodes = function(data,
                      ylab = "",
                      main = "",
                      labeloffset = 0.5) {
-  data %>% plot(
+  data %>% select(-wave) %>% plot(
     .,
     xlab = "Story",
     ylab = ylab,
@@ -101,22 +92,30 @@ plotcodes = function(data,
     offset = 10
   )
   
-  # TODO: tidy this up
-  text(x = mean(c(0, 3.5)),
+  # obtain groups
+  groups =
+    data %>%
+    group_by(wave) %>%
+    summarise(lastfid = last(fid))
+  
+  # add lines for each group
+  for (i in 1:length(groups$lastfid)-1) {
+    abline(v = groups$lastfid[i] + 0.5)
+  }
+  groups$lastfid
+  
+  # add block labels
+  for (i in 1:length(groups$lastfid)) {
+    a = max(groups$lastfid[i-1], 0) + 0.5
+    b = groups$lastfid[i] + 0.5
+    
+    text(x = mean(c(a, b)),
        y = 15,
-       labels = "Pilot")
-  abline(v = 3.5)
-  text(x = mean(c(3.5, 13.5)),
-       y = 15,
-       labels = "Wave1")
-  abline(v = 13.5)
-  text(x = mean(c(13.5, 25.5)),
-       y = 15,
-       labels = "Wave2")
-  abline(v = 25.5)
-  text(x = mean(c(25.5, 35)),
-       y = 15,
-       labels = "Wave3")
+       labels = groups$wave[i]
+       )
+    
+  }
+ 
 }
 
 ```

@@ -164,7 +164,8 @@ retrieve_waves = function(vault = SHEETS_VAULT,
                         vault = vault)
   waves = 
     data %>%
-    transmute(fid = id, wave = wave)
+    transmute(fid = row_number(), 
+              wave = wave)
   
   # save
   if(save_to_data == TRUE)
