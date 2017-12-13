@@ -5,36 +5,26 @@ output: html_notebook
 ```{r "setup", include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_knit$set(root.dir = "..")
-source("setup.R")
-library(googlesheets)
+source("../R/retrieve_data.R")
 ```
 ## Data retrieval
 Participant data, exported from LimeSurvey, is stored in Google Sheet. 
 
-First, check if Google Sheets are accessible, by running gs_ls() once.
-```{r}
-gs_ls() %>% is_tibble()
-```
-The key to the sheet is stored in the encrypted vault. Here it is how it was stored:
-```{r, eval=FALSE, results='hide'}
-#key = gs_ls() %>% 
-#  filter(grepl("1RUDyCr6C", sheet_key)) %>% 
-#  select(sheet_key) %>%
-#  first()
-# encrypt(.name = SHEETS_VAULT, s1_participants = key)
+Start by retrieving the data. The key to the appropriate Google Sheet is encrypted in the vault. Out-of-band authentication may be needed to
+access Google Sheets.
 
-```
-Retrieve the key and read the data:
 ```{r, results='hide'}
-key = decrypt(SHEETS_VAULT)$s1_participants
-data = gs_read(gs_key(key))
+data = retrieve_sheet_data("s1_participants")
 ```
-Here's the collumns in the dataset:
+Here are the available variables per participant:
 ```{r}
 names(data)
+
 ```
+
 ## Sample summaries
 ### Gender
+
 ```{r}
 data %>% group_by(GENDER) %>% summarise(n()) 
 ```
