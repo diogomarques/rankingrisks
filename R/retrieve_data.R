@@ -73,6 +73,13 @@ retrieve_rqda_codings = function(rqda_db = RQDA_PROJECT_PATH
 get_sheet_keys = function(vault = SHEETS_VAULT) {
   require(secure)
   decrypt(SHEETS_VAULT)
+  
+  # An example of how keys were encrypted:
+  # key_s1_raw_stories = gs_ls() %>% 
+  #   filter(grepl("Study 1: raw stories", sheet_title)) %>% 
+  #   select(sheet_key) %>%
+  #   first()
+  # encrypt(.name = SHEETS_VAULT, s1_raw_stories = key_s1_raw_stories)
 }
 
 #' Assure access to Google Sheets by running gs_ls() once. May require entering
@@ -106,10 +113,11 @@ has_access_to_sheets = function() {
 #' @export
 #'
 #' @examples
-retrieve_sheet_data = function(sheet_name, vault = SHEETS_VAULT) {
+retrieve_sheet_data = function(sheet_name, 
+                               vault = SHEETS_VAULT) {
   require(glue)
   require(tidyverse)
-  
+
   # check that name is in vault
   sheets = get_sheet_keys(vault = vault)
   if (!(sheet_name %in% names(sheets)))
