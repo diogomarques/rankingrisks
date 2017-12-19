@@ -1,32 +1,123 @@
 ---
 title: "Visualizing codings with diagrams"
 output:
-  pdf_document: default
   html_notebook: default
+  pdf_document: default
 ---
 ```{r "setup", include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-load("../data/codings.rda")
 require(tidyverse)
 ```
 
-These are notes on visualizing the codings structure with diagrams. This is a step in constructing a typology of instances of unauthorized access.
+These are notes on visualizing the codings with diagrams. The immediate goal is to describe the data. This will be followed by constructing a typology of instances of unauthorized access.
+
+Analysis are based on the `codings` dataset, which looks like this:
+
+```{r}
+load("../data/codings.rda")
+str(codings, vec.len = 1, ncharmax = 80)
+```
+Where:
+
+- `fid` is the story identifier
+- `codename` is a code attributed by a coder, following a category-code-subcode convention.
+- `category`, `code`, `subcode` unfold the coding convention
+- `category.desc` is the description of the category, formulated as a question
+- `description` is the description of codes or subcodes, formulated as an answer
 
 # Objectives
-The objectives of this analysis are as follows:
+This analysis will take top-down view, looking first at code categories, and progressively going deeper until reaching exemplary quotes. 
 
-1. Visualize code frequencies in each category.
-2. Visualize relationships between codes of different categories.
+The objectives are as follows:
 
-# Issues and observations prior to analysis
-## Temporal pattern
-As is expected by data collections through a narrative device, the code categories follow a temporal pattern. Centering stories around the instance or pattern of unauthorized access, the codes reflect three periods in time: *before*, *during*, and *after*.
+1. Understand the categories of codes (i.e., dimensions) which were found.
+   i) Category descriptions.
+   ii) Factor categories and list categories.
+   iii) Temporal structure.
+2. Understand the codes and subcodes which were found.
+   i) Code frequecies
+   ii) Subcode frequencies
+3. Understand relationships
+    i) Between codes in different categories
+    ii) Between codes in list categories (co-occurence)
 
-1. Before: code categories *relationshiptype* and *motivation*.
-2. During: code categories *opportunity*, *lock*, and *process*.
-3. After: code categories *knowledge*, *aftermath*, and *status*.
+# Categories
+## Descriptions
 
-See the [codefrequency](codefrequency.nb.html) notebook for descriptions of categories. 
+The category descriptions are as follows:
+```{r}
+codings %>%
+  select(Category = category, Desription = category.desc) %>%
+  distinct() %>% 
+  knitr::kable()
+```
+
+## Factor and list categories
+For most code categories, only one code was selected per per story (as evidenced by *[Choose one]* in the code description). However, for code categories `process` and `aftermath`, raters were free to not choose any code, or to choose many (*[Choose all that apply]*). 
+
+### Factor categories
+Categories for which rater were only able to select one code translate simply to categorical variables, or factors. Each code, or code-subcode combinations represents a level of that factor.
+
+For instance, the category `lock` can be converted into factor, with the following levels:
+```{r}
+codings %>% 
+  filter(category == "lock") %>%
+  transmute(levels = codename, description) %>%
+  distinct() %>%
+  arrange(levels) %>%
+  knitr::kable()
+```
+
+### List categories
+Categories `process` and `aftermath` do not enjoy the same property of being easily transformed into a factor. They are, instead, list variables. For each observational unit, each category contains a list of codes or code-subcodes. The list can be empty or have as many elements as there are options.
+
+For instance, in the process category, stories were often rated with more than one code:
+
+```{r}
+codings %>%
+  filter(category == "process") %>%
+  select(story = fid, codename) %>%
+  group_by(story) %>%
+  summarise(n_process_codes = n()) %>%
+  filter(n_process_codes > 1)
+```
+### Spreading the data
+Using this distintion of factor and list codes, we can now prepare a tidy dataset, `codings_wide`, in which each row represents an observation (a story), and each column represents a category. Depending on the type of category, a cell will either contain a level of a factor, or a vector of codes/subcodes (which may be empty).
+
+```{r}
+codings_wide = 
+  codings %>% 
+  select(fid, category, codename) %>%
+  group_by(fid, category) %>%
+  # convert all codes per fid/category into lists
+  summarise(codename_list = list(codename)) %>%
+  spread(category, codename_list) %>%
+  # unlist factor categories
+  mutate_at(vars(-aftermath, -process), unlist) %>%
+  # substitute NULLs for empty vectors with functional magic
+  mutate(aftermath = map(aftermath, ~ . %||% character(0))) %>%
+  mutate(process = map(process, ~ . %||% character(0))) %>%
+  as_data_frame()
+knitr::kable(head(codings_wide))
+
+
+```
+
+
+
+
+## Temporal structure
+Since stories were collected through a narrative device, it is expectable that code categories follow a temporal pattern. 
+
+> TODO: mark placement of codes withing stories in dataset
+
+Centering stories around the instance or pattern of unauthorized access, the categories can be seen as reflecting three periods in time: *before*, *during*, and *after*.
+
+1. Before: code categories `relationshiptype` and `motivation`.
+2. During: code categories `opportunity`, `lock`, and `process`.
+3. After: code categories `knowledge`, `aftermath`, and `status`.
+
+### Representation
 
 ```{r}
 require(ggraph)
@@ -70,15 +161,9 @@ ggraph(g, layout = "circle") +
 
 > TODO: not satisfied with this. try other timeline visualizations.
 
-## Level of analysis
-For this analysis, the focus will be on codes, *not* subcodes. 
+# Codes
 
-The codings data looks like this:
-```{r}
-str(codings, vec.len = 1, ncharmax = 80)
-```
-
-To analyze at the code level, where only category and code are needed, only one instance of code per story is needed.
+For this analysis, the focus will be on codes, *not* subcodes. To analyze at the code level, where only category and code are needed, only one instance of code per story is needed.
 
 ```{r}
 codings.wo.subcodes =
@@ -88,10 +173,8 @@ codings.wo.subcodes =
 str(codings.wo.subcodes, vec.len = 1, ncharmax = 80)
 ```
 
-## Dealing with multi-code categories
-For most code categories, only one code is selected per observational unit (i.e., fid). However, for code categories *process* and *aftermath*, raters were free to not choose any code, or to choose many. Thus, each code in on of these categories can be seen as a category itself, with a binary value. This fact presents challenges to subsequent analysis, which will often require exactly 1 value per observational unit.
-
-To be able to proceed with exploring visualizations, an additional dataset is created limited to the remaining categories. To easily conform with frequency analysis, categories are spread to collumns.
+## Dealing with open dimensions categories
+To be able to proceed with exploring visualizations, an additional dataset is created limited to the categorical dimensions. To easily conform with frequency analysis, categories are spread to collumns.
 
 ```{r echo=TRUE}
 data.wide = 
