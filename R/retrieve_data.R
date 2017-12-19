@@ -26,6 +26,7 @@ retrieve_rqda_codings = function(rqda_db = RQDA_PROJECT_PATH
   codings = RQDA::getCodingTable()
   category = RQDA::RQDAQuery("select name, memo from codecat where status = 1")
   code = RQDA::RQDAQuery("select name, memo from freecode where status = 1")
+  contents = RQDA::RQDAQuery("select id, file from source")
   RQDA::closeProject()
   
   # clean-up
@@ -38,7 +39,16 @@ retrieve_rqda_codings = function(rqda_db = RQDA_PROJECT_PATH
       code = str_extract(codename, "(?<=\\-)[a-z]*"),
       subcode = str_extract(code.subcode, "(?<=\\-)[a-z]*")
     ) %>%
-    select(fid, codename, category, code, subcode)
+    select(fid, codename, category, code, subcode, 
+           char_start = index1, char_end =index2)
+  
+  # join to story length (number of characters)
+  contents =
+    contents %>%
+    transmute(fid = id, char_fid = nchar(file))
+  codings =
+    codings %>%
+    left_join(contents, by = "fid")
   
   # join to code descriptions
   codings =
