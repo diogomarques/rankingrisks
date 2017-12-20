@@ -150,6 +150,8 @@ str(codings_wide, max.level = 1, vec.len = 1)
 
 Instead of looking just at the mean, we can also see the distribution of relative start characters across categories with a violin plot. 
 
+> TODO: try a crossbar geom, which will require some prior computation of mean and sd (or other in the visualizing error section)
+
 ```{r}
 codings %>% 
   mutate(
@@ -218,9 +220,44 @@ ggraph(g, layout = "circle") +
 
 ```
 
-# Codes
+# Codes & subcodes
+The dataset does not distinguish between codes or subcodes: whatever was the lowest possible selectable rating, was the one attributed by raters. First we'll look at the distribution of these codes or subcodes, and then do the same with subcodes consolidated into codes.
 
-> TODO: Start over with new cleaned-up data
+## Barplots
+All barplots will be dram from the same function below, for consistency.
+
+```{r echo=F}
+# a helper funtion to draw barplots for categories
+barplot_category = function(mcategory) {
+  codings %>%
+    group_by(category, codename) %>%
+    summarise(n = n()) %>%
+    filter(category == mcategory) %>%
+    arrange(category, -n) %>%
+    mutate(codename = fct_inorder(codename)) %>%
+    ggplot() +
+    aes(x = codename, y = n) + 
+    geom_bar(stat = "identity") +
+    coord_flip()
+}
+```
+
+```{r}
+barplot_category("relationshiptype")
+barplot_category("opportunity")
+barplot_category("motivation")
+barplot_category("lock")
+barplot_category("process")
+barplot_category("knowledge")
+barplot_category("aftermath")
+barplot_category("status")
+```
+
+
+
+
+
+> TODO: 
 
 For this analysis, the focus will be on codes, *not* subcodes. To analyze at the code level, where only category and code are needed, only one instance of code per story is needed.
 
