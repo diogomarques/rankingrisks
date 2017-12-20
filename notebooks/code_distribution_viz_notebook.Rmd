@@ -21,6 +21,8 @@ Where:
 
 - `fid` is the story identifier
 - `codename` is a code attributed by a coder, following a category-code-subcode convention.
+- `char_fid`is the total number of characters in the story
+- `char_start` and `char_end` are characters delimiting the excerpt for which the code was attributed
 - `category`, `code`, `subcode` unfold the coding convention
 - `category.desc` is the description of the category, formulated as a question
 - `description` is the description of codes or subcodes, formulated as an answer
@@ -68,6 +70,8 @@ codings %>%
   knitr::kable()
 ```
 
+Some levels correspond to codes (following the category-code convention), and some correspond to subcodes (category-code-subcode). Because the codebook was designed to not allow selection of codes when subcodes were available, there is no overlap.
+
 ### List categories
 Categories `process` and `aftermath` do not enjoy the same property of being easily transformed into a factor. They are, instead, list variables. For each observational unit, each category contains a list of codes or code-subcodes. The list can be empty or have as many elements as there are options.
 
@@ -81,6 +85,16 @@ codings %>%
   summarise(n_process_codes = n()) %>%
   filter(n_process_codes > 1)
 ```
+Story 2, for instance, has 5 process codes:
+
+```{r}
+codings %>% 
+  filter(category == "process", fid == 2) %>%
+  select(fid, codename)
+  
+```
+Because the codes represent processes that occured in an observational unit, it makes sense to think of them as list.
+
 ### Spreading the data
 Using this distintion of factor and list codes, we can now prepare a tidy dataset, `codings_wide`, in which each row represents an observation (a story), and each column represents a category. Depending on the type of category, a cell will either contain a level of a factor, or a vector of codes/subcodes (which may be empty).
 
@@ -91,33 +105,66 @@ codings_wide =
   group_by(fid, category) %>%
   # convert all codes per fid/category into lists
   summarise(codename_list = list(codename)) %>%
+  # make a column per category
   spread(category, codename_list) %>%
-  # unlist factor categories
+  # clean-up factor categories
   mutate_at(vars(-aftermath, -process), unlist) %>%
-  # substitute NULLs for empty vectors with functional magic
+  # substitute NULLs in list categories for empty lists
+  # with functional magic
   mutate(aftermath = map(aftermath, ~ . %||% character(0))) %>%
   mutate(process = map(process, ~ . %||% character(0))) %>%
   as_data_frame()
-knitr::kable(head(codings_wide))
-
-
 ```
 
+The first few rows of the widen dataset look like this:
 
-
+```{r}
+knitr::kable(head(codings_wide))
+```
 
 ## Temporal structure
 Since stories were collected through a narrative device, it is expectable that code categories follow a temporal pattern. 
 
-> TODO: mark placement of codes withing stories in dataset
+The dataset contains an indication of the first character associated with a coding, as `chart_start`, and also the total story length, as `char_fid`. We can calculate a relative location in the text (from 0 to 1) where codes were assigned, on average, and calculate the average per category. The ordered categories are stored as `categories_ordered` to recover the ordering in subsequent visualizations. 
 
-Centering stories around the instance or pattern of unauthorized access, the categories can be seen as reflecting three periods in time: *before*, *during*, and *after*.
+```{r}
+categories_ordered = 
+  codings %>% 
+    mutate(
+      relative_start = char_start / char_fid
+      ) %>%
+    group_by(category) %>%
+    summarise(
+      mean_relative_start = mean(relative_start)
+      ) %>%
+    arrange(mean_relative_start)
+categories_ordered
+```
 
-1. Before: code categories `relationshiptype` and `motivation`.
-2. During: code categories `opportunity`, `lock`, and `process`.
+Instead of looking just at the mean, we can also see the distribution of relative start characters across categories with a violing plot. 
+
+```{r}
+codings %>% 
+  mutate(
+    relative_start = char_start / char_fid,
+    category = factor(category, levels = categories_ordered$category)
+    ) %>%
+  ggplot +
+  aes(
+    x = category, 
+    y = relative_start
+    ) + 
+  geom_violin(scale = "width", trim = F, draw_quantiles = c(0.5)) +
+  geom_point()
+```
+
+Centering stories around the instance or pattern of unauthorized access, the categories can be seen as reflecting three moements in time: *before*, *during*, and *after*.
+
+1. Before: code categories `relationshiptype`, `opportunity`, and `motivation`.
+2. During: code categories `lock`, and `process`.
 3. After: code categories `knowledge`, `aftermath`, and `status`.
 
-### Representation
+> TODO: continue from here
 
 ```{r}
 require(ggraph)
