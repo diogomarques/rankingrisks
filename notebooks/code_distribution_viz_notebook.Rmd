@@ -1,17 +1,19 @@
 ---
-title: "Visualizing codings with diagrams"
-output:
-  html_notebook: default
-  pdf_document: default
+title: "Overview of the coded qualitative data"
+output: 
+  html_notebook: 
+    number_sections: yes
+    toc: yes
 ---
 ```{r "setup", include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 require(tidyverse)
 ```
 
-These are notes on visualizing the codings with diagrams. The immediate goal is to describe the data. This will be followed by constructing a typology of instances of unauthorized access.
+These notes describe the codings attributed to the qualitative data by raters. This description step will be followed by constructing a typology of instances of unauthorized access.
 
-Analysis are based on the `codings` dataset, which looks like this:
+# Data
+Analysis is based on the `codings` dataset, which looks like this:
 
 ```{r}
 load("../data/codings.rda")
@@ -27,21 +29,10 @@ Where:
 - `category.desc` is the description of the category, formulated as a question
 - `description` is the description of codes or subcodes, formulated as an answer
 
-# Objectives
+The dataset was created by the `retrieve_data.R` script, which retrieves it from the RQDA database, merging fields in several tables. No previous transformations were performed.
+
+# Structure
 This analysis will take top-down view, looking first at code categories, and progressively going deeper until reaching exemplary quotes. 
-
-The objectives are as follows:
-
-1. Understand the categories of codes (i.e., dimensions) which were found.
-   i) Category descriptions.
-   ii) Factor categories and list categories.
-   iii) Temporal structure.
-2. Understand the codes and subcodes which were found.
-   i) Code frequecies
-   ii) Subcode frequencies
-3. Understand relationships
-    i) Between codes in different categories
-    ii) Between codes in list categories (co-occurence)
 
 # Categories
 ## Descriptions
@@ -58,7 +49,7 @@ codings %>%
 For most code categories, only one code was selected per per story (as evidenced by *[Choose one]* in the code description). However, for code categories `process` and `aftermath`, raters were free to not choose any code, or to choose many (*[Choose all that apply]*). 
 
 ### Factor categories
-Categories for which rater were only able to select one code translate simply to categorical variables, or factors. Each code, or code-subcode combinations represents a level of that factor.
+Categories for which rater were only able to select one code translate simply to categorical variables, or factors. Each code, or code-subcode combination represents a level of that factor.
 
 For instance, the category `lock` can be converted into factor, with the following levels:
 ```{r}
@@ -125,7 +116,7 @@ knitr::kable(head(codings_wide))
 ## Temporal structure
 Since stories were collected through a narrative device, it is expectable that code categories follow a temporal pattern. 
 
-The dataset contains an indication of the first character associated with a coding, as `chart_start`, and also the total story length, as `char_fid`. We can calculate a relative location in the text (from 0 to 1) where codes were assigned, on average, and calculate the average per category. The ordered categories are stored as `categories_ordered` to recover the ordering in subsequent visualizations. 
+The dataset contains an indication of the first character associated with a coding, as `chart_start`, and also the total story length, as `char_fid`. We can calculate a relative location in the text (from 0 to 1) where codes were assigned. We can then order categories by the mean relative location where codings started.
 
 ```{r}
 categories_ordered = 
@@ -140,7 +131,7 @@ categories_ordered =
     arrange(mean_relative_start)
 categories_ordered
 ```
-This ordering is useful, for instance, for ordering the columns in the `codings_wide` dataset: 
+The ordered categories are stored as `categories_ordered` to recover the ordering in subsequent visualizations.  This ordering is useful, for instance, for ordering the columns in the `codings_wide` dataset: 
 ```{r}
 codings_wide = 
   codings_wide %>%
@@ -148,9 +139,7 @@ codings_wide =
 str(codings_wide, max.level = 1, vec.len = 1)
 ```
 
-Instead of looking just at the mean, we can also see the distribution of relative start characters across categories with a violin plot. 
-
-> TODO: try a crossbar geom, which will require some prior computation of mean and sd (or other in the visualizing error section)
+Instead of looking just at the mean, we can also see the distribution of relative start characters across categories. One way is with a violin plot:
 
 ```{r}
 codings %>% 
@@ -164,8 +153,32 @@ codings %>%
     y = relative_start
     ) + 
   geom_violin(scale = "width", trim = F, draw_quantiles = c(0.5)) +
-  geom_point()
+  geom_point(alpha = 1/5)
 ```
+Alternative, with the point range geom and flipped:
+
+```{r}
+codings %>% 
+  mutate(
+    relative_start = char_start / char_fid,
+    category = factor(category, levels = rev(categories_ordered$category))
+    ) %>%
+  ggplot +
+  aes(
+    x = category, 
+    y = relative_start
+    ) + 
+  stat_summary(
+    fun.y = mean,
+    fun.ymax = max,
+    fun.ymin = min,
+    geom = "pointrange"
+  ) +
+  geom_point(alpha = 1/10) + 
+  coord_flip()
+
+```
+
 
 Centering stories around the instance or pattern of unauthorized access, the categories can be seen as reflecting three moments in time: *before*, *during*, and *after*.
 
@@ -179,48 +192,14 @@ A more succint visualization of this structural property could be made, but it s
 
 To some extent, this structure might have been super-imposed in the story editing process. Coded raw stories can be checked for comparison.
 
-
-```{r, include=F}
-require(ggraph)
-
-categories =
-  data_frame(
-    names = c(
-      
-      "opportunity",
-      "lock",
-      "process",
-      "knowledge",
-      "aftermath",
-      "status",
-      "relationshiptype",
-      "motivation"
-    )
-  )
-
-relations = tribble(
-  ~from, ~to,
-  "relationshiptype", "motivation",
-  "motivation", "opportunity",
-  "opportunity", "lock",
-  "lock", "process",
-  "process", "knowledge",
-  "knowledge","aftermath",
-  "aftermath","status"
-) %>% 
-  as_data_frame()
-
-g = graph_from_data_frame(relations, directed = T, vertices = categories)
-
-ggraph(g, layout = "circle") +
-  geom_edge_link(arrow = arrow(length = unit(2, 'mm')), 
-                 end_cap = circle(10, 'mm')) + 
-  geom_node_label(aes(label = name),size = 3) +
-  theme_graph()
-
-```
-
 # Codes & subcodes
+2. Understand the codes and subcodes which were found.
+   i) Code frequecies
+   ii) Subcode frequencies
+3. Understand relationships
+    i) Between codes in different categories
+    ii) Between codes in list categories (co-occurence)
+
 The dataset does not distinguish between codes or subcodes: whatever was the lowest possible selectable rating, was the one attributed by raters. First we'll look at the distribution of these codes or subcodes, and then do the same with subcodes consolidated into codes.
 
 ## Barplots
