@@ -5,33 +5,33 @@ output:
     number_sections: yes
     toc: yes
 ---
-```{r "setup", include=FALSE}
+```{r, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
+require(gridExtra)
 require(tidyverse)
+load("../data/codings.rda")
 ```
 
 These notes describe the codings attributed to the qualitative data by raters. This description step will be followed by constructing a typology of instances of unauthorized access.
 
 # Data
-Analysis is based on the `codings` dataset, which looks like this:
+Analysis is based on the `codings` dataset, in which each row represents a code attributed to a story. It looks like this:
 
 ```{r}
-load("../data/codings.rda")
 str(codings, vec.len = 1, ncharmax = 80)
 ```
 Where:
 
 - `fid` is the story identifier
-- `codename` is a code attributed by a coder, following a category-code-subcode convention.
+- `codename` is a code attributed by a rater, following a \<category\>-\<code\>-\<subcode\> convention.
+- `category`, `code`, `subcode` unfold the coding convention
 - `char_fid`is the total number of characters in the story
 - `char_start` and `char_end` are characters delimiting the excerpt for which the code was attributed
-- `category`, `code`, `subcode` unfold the coding convention
-- `category.desc` is the description of the category, formulated as a question
-- `description` is the description of codes or subcodes, formulated as an answer
+- `description` is the description of codes or subcodes, formulated as an answer to a rating question
+- `category.desc` is the description of the category, formulated as a rating question
 
 The dataset was created by the `retrieve_data.R` script, which retrieves it from the RQDA database, merging fields in several tables. No previous transformations were performed.
 
-# Structure
 This analysis will take top-down view, looking first at code categories, and progressively going deeper until reaching exemplary quotes. 
 
 # Categories
@@ -49,7 +49,7 @@ codings %>%
 For most code categories, only one code was selected per per story (as evidenced by *[Choose one]* in the code description). However, for code categories `process` and `aftermath`, raters were free to not choose any code, or to choose many (*[Choose all that apply]*). 
 
 ### Factor categories
-Categories for which rater were only able to select one code translate simply to categorical variables, or factors. Each code, or code-subcode combination represents a level of that factor.
+Categories for which raters were only able to select one code can map directly to categorical variables, or factors. Each code (or code-subcode if available) represents a level of that factor.
 
 For instance, the category `lock` can be converted into factor, with the following levels:
 ```{r}
@@ -64,30 +64,31 @@ codings %>%
 Some levels correspond to codes (following the category-code convention), and some correspond to subcodes (category-code-subcode). Because the codebook was designed to not allow selection of codes when subcodes were available, there is no overlap.
 
 ### List categories
-Categories `process` and `aftermath` do not enjoy the same property of being easily transformed into a factor. They are, instead, list variables. For each observational unit, each category contains a list of codes or code-subcodes. The list can be empty or have as many elements as there are options.
+Categories `process` and `aftermath` do not enjoy the same property of being easily transformed into a factor. They are, instead, list variables. For each story, each category maps to a list of codes or code-subcodes which may have been chosen by the rater. The list can be empty or have as many elements as there are options.
 
-For instance, in the process category, stories were often rated with more than one code:
+For instance, in the process category, stories were often rated with more than one code. Story 2, for instance, has 5 process codes.
 
-```{r}
+```{r include=FALSE}
 codings %>%
   filter(category == "process") %>%
   select(story = fid, codename) %>%
   group_by(story) %>%
   summarise(n_process_codes = n()) %>%
-  filter(n_process_codes > 1)
+  filter(n_process_codes > 1) 
+  
 ```
-Story 2, for instance, has 5 process codes:
 
 ```{r}
 codings %>% 
   filter(category == "process", fid == 2) %>%
-  select(fid, codename)
+  select(fid, category, code, subcode) %>%
+  knitr::kable()
   
 ```
 Because the codes represent processes that occured in an observational unit, it makes sense to think of them as list.
 
 ### Spreading the data
-Using this distintion of factor and list codes, we can now prepare a tidy dataset, `codings_wide`, in which each row represents an observation (a story), and each column represents a category. Depending on the type of category, a cell will either contain a level of a factor, or a vector of codes/subcodes (which may be empty).
+Using this distintion of factor and list codes, we can now prepare a tidy dataset, `codings_wide`, in which each row represents an observation (a story), and each column represents a category. Depending on the type of category, a cell will either contain a level of a factor, or a list of codes/subcodes (which may be empty), represented as a vector.
 
 ```{r}
 codings_wide = 
@@ -129,9 +130,10 @@ categories_ordered =
       mean_relative_start = mean(relative_start)
       ) %>%
     arrange(mean_relative_start)
-categories_ordered
+categories_ordered %>%
+  knitr::kable()
 ```
-The ordered categories are stored as `categories_ordered` to recover the ordering in subsequent visualizations.  This ordering is useful, for instance, for ordering the columns in the `codings_wide` dataset: 
+The ordered categories are stored as `categories_ordered` dataset, to recover the ordering in subsequent visualizations.  This ordering is useful, for instance, for ordering the columns in the `codings_wide` dataset: 
 ```{r}
 codings_wide = 
   codings_wide %>%
@@ -155,7 +157,7 @@ codings %>%
   geom_violin(scale = "width", trim = F, draw_quantiles = c(0.5)) +
   geom_point(alpha = 1/5)
 ```
-Alternative, with the point range geom and flipped:
+Alternative, with the point range geom and coordinates flipped:
 
 ```{r}
 codings %>% 
@@ -180,13 +182,15 @@ codings %>%
 ```
 
 
+*Observations:*
+
 Centering stories around the instance or pattern of unauthorized access, the categories can be seen as reflecting three moments in time: *before*, *during*, and *after*.
 
 1. Before: code categories `relationshiptype`, `opportunity`, and `motivation`.
 2. During: code categories `lock`, and `process`.
 3. After: code categories `knowledge`, `aftermath`, and `status`.
 
-A more succint visualization of this structural property could be made, but it seems unnecessary for now. (I previously tried `ggraph`, with a circular representation, and was not happy with the results.) The structure does reflect our observations of how the stories usually progressed, such as:
+A more succint visualization of this structural property could be made, but it seems unnecessary for now. (I previously tried `ggraph`, with a circular representation, and was not happy with the results.) The structure does reflect our observations of how the stories usually progressed, such as the following fictitious example:
 
 > Ash and Val were friends (`relationshiptype`). Ash went to the bathroom and left the phone behind (`opportunity`). Val wanted to play a prank (`motivation`). The phone did not have a lock (`lock`), so Val got in and took stupid pictures (`process`). Ash found out a few days later (`knowledge`), was very mad (`aftermath`), and never spoke to Val again (`status`). 
 
@@ -195,9 +199,6 @@ To some extent, this structure might have been super-imposed in the story editin
 # Codes & subcodes
 > TODO: Code frequecies, Subcode frequencies, relationships between codes in different categories, between codes in list categories (co-occurence)
 
-The dataset does not distinguish between codes or subcodes: whatever was the lowest possible selectable rating, was the one attributed by raters. First we'll look at the distribution of these codes or subcodes, and then do the same with subcodes consolidated into codes.
-
-## Code/subcode frequency
 The distribution of codes and subcodes is likely too rich to visualize in a single visualization. For instance, a barplot, even without the labels, is not helpful:
 ```{r}
 codings %>%
@@ -214,32 +215,64 @@ codings %>%
   coord_flip()
 
 ```
-> TODO: revisit single plot with subcodes aggregated
+Raters were not able to distinguish between codes or subcodes, but consolidating subcodes into codes may be informative. We'll next look at the distribution of codes and subcodes from both perpectives. For each category, we'll first represent the distribution of codings as raters saw them, and then consolidated into codes.
 
-As expected, all categories, except for `process` and `aftermath`, have exactly has many observations. Category `process` has a higher number, because it was common that more than one process was involved in a story. Category `aftermath` has fewer observations, because many stories did not express emotional consequences to the level required by the coding criteria.
+> TODO: revisit single plot with subcodes consolidated
 
-Next, we'll look at each category at a time. Barplots will be created with the same function (below) for consistency.
+*Observations:*
+
+Even if the barchart with all categories is not very informative, some observations can be drawn. As expected, all categories, except for `process` and `aftermath`, have exactly has many observations as there are observational units. Category `process` has a higher number, because it was common that more than one process was involved in an intrusion story. Category `aftermath` has fewer observations, because many stories did not express emotional consequences to the level required by the coding criteria.
+
 ```{r}
-barplot_category = function(data_subset) { 
-  ggplot(data = data_subset) + 
-  geom_bar(
-    aes(
-      x = fct_infreq(codename),
-      fill = code
+# barplots will be created with the same functions (below) for consistency.
+barplot_category = function(data_subset) {
+    grid.arrange(
+      get_barplot_category(data_subset),
+      get_barplot_category(data_subset, consolidate = T),
+      ncol = 2
     )
-  ) +
-  coord_flip() +
-  xlab(NULL) +
-  theme(
-    legend.direction = "vertical", 
-    legend.position = "bottom")
+}
+
+get_barplot_category = function(data_subset, consolidate = FALSE) { 
+  if(consolidate) {
+    data = 
+      data_subset %>%
+      mutate(variable = code)
+  } else {
+    data = 
+      data_subset %>%
+      mutate(variable = paste(code, subcode, sep = "-"))
+  }
+  
+  plot = 
+    data %>%
+    ggplot() + 
+    geom_bar(
+      aes(
+        x = fct_infreq(variable),
+        fill = code
+      ),
+      show.legend = F
+    ) +
+    coord_flip() +
+    xlab(NULL)
+  
+  plot =
+    plot +
+    ylab(
+      ifelse(
+        consolidate, 
+        "Frequency (consolidated to codes)",
+        "Frequency (as rated)"
+      )
+     )
+  
+  plot
 }
 ```
 
-> TODO: try faceting again
-
-### relationshiptype
-The following types of relationship were found:
+## Category `relationshiptype`
+The following types of relationship were coded:
 ```{r}
 codings %>%
   filter(category == "relationshiptype") %>%
@@ -250,15 +283,19 @@ codings %>%
 ```
 
 
-Here is their distribution:
+Distributed has follows:
 ```{r}
 barplot_category(
   codings %>% filter(category == "relationshiptype")
   )
 ```
-Observations:
-* In the majority of stories, the relationship between subjects was coded as `intimate`. 
-* Stories of intrusions were passive subjects were coded as `friends` were also common.
+*Observations:*
+
+- In most stories, the relationship between subjects was coded as `intimate`. 
+
+- Stories of intrusions were passive subjects were coded as `friends` were also common.
+
+- Non-intimate types of relationships are distinguished by subcodes, while `intimate`has not subcodes. The code could have subcodes indicating wether it is a current, former, or aspirational type of relationship, has the code description suggests. Issue is worthy of revisitation.
 
 
 
@@ -267,7 +304,7 @@ Observations:
 
 
 
-> TODO: 
+> TODO: remove / revise everything below
 
 For this analysis, the focus will be on codes, *not* subcodes. To analyze at the code level, where only category and code are needed, only one instance of code per story is needed.
 
