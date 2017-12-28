@@ -6,7 +6,7 @@ output:
     toc: yes
 ---
 ```{r "setup", include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 require(tidyverse)
 ```
 
@@ -193,44 +193,75 @@ A more succint visualization of this structural property could be made, but it s
 To some extent, this structure might have been super-imposed in the story editing process. Coded raw stories can be checked for comparison.
 
 # Codes & subcodes
-2. Understand the codes and subcodes which were found.
-   i) Code frequecies
-   ii) Subcode frequencies
-3. Understand relationships
-    i) Between codes in different categories
-    ii) Between codes in list categories (co-occurence)
+> TODO: Code frequecies, Subcode frequencies, relationships between codes in different categories, between codes in list categories (co-occurence)
 
 The dataset does not distinguish between codes or subcodes: whatever was the lowest possible selectable rating, was the one attributed by raters. First we'll look at the distribution of these codes or subcodes, and then do the same with subcodes consolidated into codes.
 
-## Barplots
-All barplots will be dram from the same function below, for consistency.
+## Code/subcode frequency
+The distribution of codes and subcodes is likely too rich to visualize in a single visualization. For instance, a barplot, even without the labels, is not helpful:
+```{r}
+codings %>%
+  ggplot() +
+  geom_bar(
+    mapping = aes(
+      x = category,
+      fill = codename
+    ),
+    show.legend = F,
+    alpha = 0,
+    color = "black"
+  ) +
+  coord_flip()
 
-```{r echo=F}
-# a helper funtion to draw barplots for categories
-barplot_category = function(mcategory) {
-  codings %>%
-    group_by(category, codename) %>%
-    summarise(n = n()) %>%
-    filter(category == mcategory) %>%
-    arrange(category, -n) %>%
-    mutate(codename = fct_inorder(codename)) %>%
-    ggplot() +
-    aes(x = codename, y = n) + 
-    geom_bar(stat = "identity") +
-    coord_flip()
+```
+> TODO: revisit single plot with subcodes aggregated
+
+As expected, all categories, except for `process` and `aftermath`, have exactly has many observations. Category `process` has a higher number, because it was common that more than one process was involved in a story. Category `aftermath` has fewer observations, because many stories did not express emotional consequences to the level required by the coding criteria.
+
+Next, we'll look at each category at a time. Barplots will be created with the same function (below) for consistency.
+```{r}
+barplot_category = function(data_subset) { 
+  ggplot(data = data_subset) + 
+  geom_bar(
+    aes(
+      x = fct_infreq(codename),
+      fill = code
+    )
+  ) +
+  coord_flip() +
+  xlab(NULL) +
+  theme(
+    legend.direction = "vertical", 
+    legend.position = "bottom")
 }
 ```
 
+> TODO: try faceting again
+
+### relationshiptype
+The following types of relationship were found:
 ```{r}
-barplot_category("relationshiptype")
-barplot_category("opportunity")
-barplot_category("motivation")
-barplot_category("lock")
-barplot_category("process")
-barplot_category("knowledge")
-barplot_category("aftermath")
-barplot_category("status")
+codings %>%
+  filter(category == "relationshiptype") %>%
+  group_by(codename) %>%
+  summarise(description = unique(description)) %>%
+  arrange(codename) %>%
+  knitr::kable()
 ```
+
+
+Here is their distribution:
+```{r}
+barplot_category(
+  codings %>% filter(category == "relationshiptype")
+  )
+```
+Observations:
+* In the majority of stories, the relationship between subjects was coded as `intimate`. 
+* Stories of intrusions were passive subjects were coded as `friends` were also common.
+
+
+
 
 
 
