@@ -1,7 +1,9 @@
 ---
 title: "Overview of the coded qualitative data"
-output: 
-  html_notebook: 
+output:
+  word_document:
+    toc: yes
+  html_notebook:
     number_sections: yes
     toc: yes
 ---
@@ -200,8 +202,6 @@ A more succint visualization of this structural property could be made, but it s
 To some extent, this structure might have been super-imposed in the story editing process. Coded raw stories can be checked for comparison.
 
 # Code & subcode frequency
-> TODO: Code frequecies, Subcode frequencies, relationships between codes in different categories, between codes in list categories (co-occurence)
-
 The distribution of codes and subcodes is likely too rich to visualize in a single visualization. For instance, a barplot, even without the labels, is not helpful:
 ```{r}
 codings %>%
@@ -332,15 +332,63 @@ barplot_category(
 
 * It can also be speculated that the "bathroom scenario" provides a set of relatively safe, or otherwise favorable, conditions for active subjects. Such conditions may include a *predictable* length of time alone with the device, *forewarning* that the passive subject may return (e.g. aural notice of flushing, shower shuting off, or doors opening), *social etiquette* in favor of leaving the device unnattended (e.g. so as not to signal distrust), and passive subject's *trust* they are in a safe environment.
 
+## Category `motivation`
+The following types of intrusion opportunities were coded:
+```{r}
+codings %>%
+  filter(category == "motivation") %>%
+  group_by(codename) %>%
+  summarise(description = unique(description)) %>%
+  arrange(codename) %>%
+  knitr::kable()
+```
+
+
+Distributed has follows:
+```{r}
+barplot_category(
+  codings %>% filter(category == "motivation")
+  )
+```
+*Observations:*
+
+* "Control" was defined as the passive subject wanting "to learn about, or influence" relationships between the passive subject and third parties. By a vast majority, codings relating to control were the most selected by raters, suggesting that these is the most common motivation for intrusion among parties known to each other.
+
+* A desire to control possible intimate relationships of the passive subject (code `control-intimate`) is the most commonly selected subcode. Research on technology-mediated intimate partner abuse has previously identified control as an important, or even principal motivation (although often "control" is construed more broadly). Although definitions of abuse vary, our observation when reading the stories was that there were few examples that would undoubetedly qualify as intimate partner abuse. 
+
+* Nevertheless, this evidence does seem to lend support a more modest claim, that intrusions to smartphones can be a component of controlling behaviors between intimate partners. Furthermore, this data suggest that technology-enabled controlling behaviors may be better understood as existing on a continuum, and not necessarily under a dichotomy between abusive vs. healthy. This issue is worth revisiting, at least by listing examples.
+
+* Other, less common, motivations which raters coded were using some functionality of the device (code `convinience`), playing pranks (code `prank`), and exploitation (`exploit`).
+
+* Exploitation, in particular, was rated with subcodes that refer to behaviors that are commonly seen as extremely pernicious, namely stealing of devices (code `exploit-steal`), stealing of business information (`exploit-business`), or stealing of sexualizable media content (`exploit-sexploit`).
+
+* These exploitative motivations often deserve a great deal of attention, both in research and in media. Alarm over these types of occurences has informed interventions such as security technology, security advice, public policy, and business investment. In contrast, control-motivated intrusions, which do appear in the data much more commonly, have at best received less attention, and at worst been regarded as unimportant or unadressable. We can only speculate, but a reason behind this assimetry may be that, in control-motivated intrusions, it is often more difficult to assign polarizing roles to parties, such as perpetrator vs. victim. For instance, when an active subject seeks confirmation of partner infidelity, and finds it, it may be more difficul to label them "perpetrators of intrusion", and thus to strike enough fear to prompt interventions against those types of intrusions. Interventions, such as security technologies directed at preventing control-motivated intrusions by intimate partners would, conveivably, be seen as enabling behaviors commonly deemed censurable, such as intimate partner infidelity.
+
+## Category `lock`
+The following types of intrusion opportunities were coded:
+```{r}
+codings %>%
+  filter(category == "lock") %>%
+  group_by(codename) %>%
+  summarise(description = unique(description)) %>%
+  arrange(codename) %>%
+  knitr::kable()
+```
+
+
+Distributed has follows:
+```{r}
+barplot_category(
+  codings %>% filter(category == "lock")
+  )
+```
+*Observations:*
 
 
 
 
 
 
+> TODO: explore adding the code description as either axes or labels.
 
-
-
-
-
-> TODO: explore addind the code description as either axes or labels.
+> TODO: Re-write a prototypical story with the most common code in each category
