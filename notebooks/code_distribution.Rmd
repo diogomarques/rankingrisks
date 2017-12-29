@@ -88,6 +88,9 @@ codings %>%
 Because the codes represent processes that occured in an observational unit, it makes sense to think of them as list.
 
 ### Spreading the data
+
+> TODO: Wide representation not needed here. Move to structure notebook.
+
 Using this distintion of factor and list codes, we can now prepare a tidy dataset, `codings_wide`, in which each row represents an observation (a story), and each column represents a category. Depending on the type of category, a cell will either contain a level of a factor, or a list of codes/subcodes (which may be empty), represented as a vector.
 
 ```{r}
@@ -196,7 +199,7 @@ A more succint visualization of this structural property could be made, but it s
 
 To some extent, this structure might have been super-imposed in the story editing process. Coded raw stories can be checked for comparison.
 
-# Codes & subcodes
+# Code & subcode frequency
 > TODO: Code frequecies, Subcode frequencies, relationships between codes in different categories, between codes in list categories (co-occurence)
 
 The distribution of codes and subcodes is likely too rich to visualize in a single visualization. For instance, a barplot, even without the labels, is not helpful:
@@ -297,225 +300,47 @@ barplot_category(
 
 - Non-intimate types of relationships are distinguished by subcodes, while `intimate`has not subcodes. The code could have subcodes indicating wether it is a current, former, or aspirational type of relationship, has the code description suggests. Issue is worthy of revisitation.
 
+- It is conceivable that the relationship being intimate or non-intimate is a preponderant factor on how stories of intrusions progress. This hypothesis is also worth revisitation.
 
-
-
-
-
-
-
-> TODO: remove / revise everything below
-
-For this analysis, the focus will be on codes, *not* subcodes. To analyze at the code level, where only category and code are needed, only one instance of code per story is needed.
-
+## Category `opportunity`
+The following types of intrusion opportunities were coded:
 ```{r}
-codings.wo.subcodes =
-  codings %>% 
-  select(fid, category, code) %>%
-  distinct()
-str(codings.wo.subcodes, vec.len = 1, ncharmax = 80)
+codings %>%
+  filter(category == "opportunity") %>%
+  group_by(codename) %>%
+  summarise(description = unique(description)) %>%
+  arrange(codename) %>%
+  knitr::kable()
 ```
 
-## Dealing with open dimensions categories
-To be able to proceed with exploring visualizations, an additional dataset is created limited to the categorical dimensions. To easily conform with frequency analysis, categories are spread to collumns.
 
-```{r echo=TRUE}
-data.wide = 
-  codings.wo.subcodes %>% 
-  filter(category != "process" & 
-           category != "aftermath") %>%
-  spread(category, code) %>%
-  # order by timeline
-  select(fid, relationshiptype, motivation, opportunity, lock, knowledge, status)
-str(data.wide, vec.len = 2)
-```
-
-Another common data representation used in visualizations is as a frequency table, where each line contains the frequency of a given combinations of codes.
-
+Distributed has follows:
 ```{r}
-data.wide.freq =
-  data.wide %>%
-  select(-fid) %>%
-  group_by_all() %>%
-  summarise(freq = n()) %>%
-  ungroup() %>%
-  arrange(desc(freq))
-str(data.wide.freq, vec.len = 3)
+barplot_category(
+  codings %>% filter(category == "opportunity")
+  )
 ```
+*Observations:*
 
-### Transformation
+* Raters understood intrusions happening, in the vast majority of cases, when devices were left unattended by the passive subject.
 
-> TODO: revise when additional data comes in
+* Raters found several instantiations where devices were left temporarily unattended. Most commonly, they found stories to indicate devices being unattended while their owners went to the bathroom (code `unattended-bathroom`). Raters also found stories where devices were left unnatended in locations often deemed "trusted", such as the home or office, while passive subject went somewhere else, for instance to run errands, or to a meeting (codes `unattended-outside`, and `unattended-meeting`); and stories where passive subjects were asleep (`unattended-asleep`). These stories of intrusions thus substantiate the questioning of common assumptions of trustworthyness associated with locations.
 
-Another approach that could be considered would be to transform the data in multi-code categories, so that they comply with the 1 observation per story format.
+* Situations where the opportunity for access was created by deceiving the passive subject (code `opportunity-deception`), or through access to a secondary device (code `opportunity-secondarydevice`) were much less common. Because those may be extreme cases, it is worth revisiting the association of these codes with, at least, motivation and process codes.
 
-For both multi-code categories, cases where raters did not select any code can be trivially transformed in a "unspecified"-type level.
+* The commonality of the "bathroom scenario" seem to suggest that intrusions can occur in very little time. This aspect might be of importance for system design. For instance, intrusion detection algorithms which require an substantial period of behavior acquisition prior to classification may be innefective in practice.
 
-The problematic cases are those for which there was more than one coding. 
-
-For aftermath, these are the cases with multiple codings:
-
-```{r}
-codings.wo.subcodes %>%
-  select(fid, category, code) %>%
-  filter(category == "aftermath") %>%
-  arrange(code) %>%
-  group_by(fid) %>%
-  nest(code) %>%
-  mutate(n = purrr::map_int(data, nrow),
-         codes = purrr::map(data, unlist),
-         codelist = purrr::map_chr(codes, paste, collapse = ", ")) %>%
-  filter(n > 1) %>%
-  select(fid, codelist) %>%
-  arrange(codelist)
-```
-There appear to be the following patterns:
-
-- Active subject has mixed feelings
-- Both subjects have negative feelings
-
-There is one instance which does not conform to this patter, which could be labeled as "others".
-
-For process, these are the cases with multiple codings:
-
-```{r}
-codings.wo.subcodes %>%
-  select(fid, category, code) %>%
-  filter(category == "process") %>%
-  arrange(code) %>%
-  group_by(fid) %>%
-  nest(code) %>%
-  mutate(n = purrr::map_int(data, nrow),
-         codes = purrr::map(data, unlist),
-         codelist = purrr::map_chr(codes, paste, collapse = ", ")) %>%
-  filter(n > 1) %>%
-  select(fid, codelist) %>%
-  arrange(codelist)
-```
-It appears that all combinations include snooping, plus one other kind of code.
-
-However, it is not true that those other codes subsume "snooping". They sometimes occur on their own:
-
-```{r}
-snooping.fids =
-  codings.wo.subcodes %>% 
-  filter(category == "process" & code == "snooping") %>%
-  .$fid
-
-codings.wo.subcodes %>%
-  filter(category == "process" &
-           ! fid %in% snooping.fids)
-
-```
-
-A rule for transformation could be always choosing the other code. In that case, any selection of on of the other codes should be described as *possibly* subsumming "snooping". One disadvantage to this approach would be to possibly distort an analysis of the relationshiip of "snooping" codes and other codes.
-
-
-# Alluvial diagrams 
-## With [alluvial](https://CRAN.R-project.org/package=alluvial)
-First, an attempt at creating an alluvial using the "alluvial" package. This package uses standard plotting. 
-
-```{r echo=TRUE}
-library(alluvial)
-```
+* It can also be speculated that the "bathroom scenario" provides a set of relatively safe, or otherwise favorable, conditions for active subjects. Such conditions may include a *predictable* length of time alone with the device, *forewarning* that the passive subject may return (e.g. aural notice of flushing, shower shuting off, or doors opening), *social etiquette* in favor of leaving the device unnattended (e.g. so as not to signal distrust), and passive subject's *trust* they are in a safe environment.
 
 
 
-Here is the default alluvial representation:
-
-```{r echo=TRUE}
-alluvial(
-  alluvial.data[,1:6],
-  freq = alluvial.data$freq
-)
-```
-
-The graph conveys the correct code frequencies for each category, limited to the single-choice categories. However, the relationships between codes are difficult to make sense of.
-
-Using this package, the input is a contigency table, and the alluvia can be followed from beggining to end, their thickness representing frequency. The graph would be easier to understand if alluvials only represented pairwise relationships between adjoining categories, i.e. pairwise "of which" relationships. 
-
-Even with these constraints, there is some room to improve on the graph, by adding colors and tinkering with ordering. 
-
-```{r}
-# Create orderings
-alluvial.data = 
-  alluvial.data %>% 
-  mutate(
-    relationshiptype.order = 
-      case_when(
-        relationshiptype == "intimate" ~ 1,
-        relationshiptype == "nonintimate" ~ 2,
-        relationshiptype == "unspecified" ~ 3,
-        TRUE ~ 0
-        ),
-    motivation.order = 
-      case_when(
-        motivation == "control" ~ 1,
-        motivation == "exploit" ~ 2,
-        motivation == "prank" ~ 3,
-        motivation == "convenience" ~ 4,
-        motivation == "accidental" ~ 5,
-        motivation == "unspecified" ~ 6,
-        TRUE ~ 0
-        ),
-    opportunity.order = 
-      case_when(
-        opportunity == "unattended" ~ 1,
-        opportunity == "deception" ~ 2,
-        opportunity == "secondarydevice" ~ 3,
-        opportunity == "unspecified" ~ 4,
-        TRUE ~0
-      )
-  ) 
-alluvial(
-  alluvial.data[,1:6],
-  freq = alluvial.data$freq,
-  border = alluvial.data$relationshiptype.order + 1,
-  col = alluvial.data$relationshiptype.order + 1,
-  ordering = list(
-    alluvial.data$relationshiptype.order,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-  ),
-  gap.width = .1,
-  cex = .7,
-  blocks = T
-  #alpha = 0.7,
-)
-```
 
 
-Code for the previous graph is very hacky. The vertical ordering of levels is an experimental feature, and I found no way of properly ordering past the first category. 
-
-Conclusion: objective 1, of representing code frequencies, is partially accomplished, by the stacked barplot format of the alluvial nodes. However, relationships of adjoining codes are difficult to discern. Additionally, there is very little flexibility for tinkering with the basic plot.
-
-## With [ggalluvial](https://CRAN.R-project.org/package=ggalluvial)
-
-> Ongoing
-
-First attempt, using the same data.
-```{r}
-library(ggalluvial)
-alluvial.data %>% 
-  ggplot(aes(weight = freq, 
-             axis1 = relationshiptype, 
-             axis2 = motivation,
-             axis3 = opportunity,
-             axis4 = lock,
-             axis5 = knowledge,
-             axis6 = status)) +
-  geom_alluvium(aes(fill = motivation), width = 1/12) +
-  geom_stratum(width = 1/12, fill = "black", color = "grey") +
-  geom_label(stat = "stratum", label.strata = TRUE) +
-  scale_x_continuous(breaks = 1:6, labels = c(names(data))[1:6]) + #, labels = names(data)) +
-  ggtitle("Story codings alluvial")
-
-```
 
 
-# Code relationships within moments
 
 
+
+
+
+> TODO: explore addind the code description as either axes or labels.
