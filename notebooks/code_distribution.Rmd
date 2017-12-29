@@ -42,13 +42,13 @@ This analysis will take top-down view, looking first at code categories, and pro
 The category descriptions are as follows:
 ```{r}
 codings %>%
-  select(Category = category, Desription = category.desc) %>%
+  select(Category = category, Description = category.desc) %>%
   distinct() %>% 
   knitr::kable()
 ```
 
 ## Factor and list categories
-For most code categories, only one code was selected per per story (as evidenced by *[Choose one]* in the code description). However, for code categories `process` and `aftermath`, raters were free to not choose any code, or to choose many (*[Choose all that apply]*). 
+For most code categories, only one code was selected per story (as evidenced by *[Choose one]* in the code description). However, for code categories `process` and `aftermath`, raters were free to not choose any code, or to choose many (*[Choose all that apply]*). 
 
 ### Factor categories
 Categories for which raters were only able to select one code can map directly to categorical variables, or factors. Each code (or code-subcode if available) represents a level of that factor.
@@ -93,7 +93,7 @@ Because the codes represent processes that occured in an observational unit, it 
 
 > TODO: Wide representation not needed here. Move to structure notebook.
 
-Using this distintion of factor and list codes, we can now prepare a tidy dataset, `codings_wide`, in which each row represents an observation (a story), and each column represents a category. Depending on the type of category, a cell will either contain a level of a factor, or a list of codes/subcodes (which may be empty), represented as a vector.
+Using this distinction of factor and list codes, we can now prepare a tidy dataset, `codings_wide`, in which each row represents an observation (a story), and each column represents a category. Depending on the type of category, a cell will either contain a level of a factor, or a list of codes/subcodes (which may be empty), represented as a vector.
 
 ```{r}
 codings_wide = 
@@ -122,7 +122,7 @@ knitr::kable(head(codings_wide))
 ## Temporal structure
 Since stories were collected through a narrative device, it is expectable that code categories follow a temporal pattern. 
 
-The dataset contains an indication of the first character associated with a coding, as `chart_start`, and also the total story length, as `char_fid`. We can calculate a relative location in the text (from 0 to 1) where codes were assigned. We can then order categories by the mean relative location where codings started.
+The dataset contains an indication of the first character associated with a coding, as `chart_start`, and the total story length, as `char_fid`. We can calculate a relative location in the text (from 0 to 1) where codes were assigned. We can then order categories by the mean relative location where codings started.
 
 ```{r}
 categories_ordered = 
@@ -195,14 +195,14 @@ Centering stories around the instance or pattern of unauthorized access, the cat
 2. During: code categories `lock`, and `process`.
 3. After: code categories `knowledge`, `aftermath`, and `status`.
 
-A more succint visualization of this structural property could be made, but it seems unnecessary for now. (I previously tried `ggraph`, with a circular representation, and was not happy with the results.) The structure does reflect our observations of how the stories usually progressed, such as the following fictitious example:
+A more succinct visualization of this structural property could be made, but it seems unnecessary for now. (I previously tried `ggraph`, with a circular representation, and was not happy with the results.) The structure does reflect our observations of how the stories usually progressed, such as the following fictitious example:
 
 > Ash and Val were friends (`relationshiptype`). Ash went to the bathroom and left the phone behind (`opportunity`). Val wanted to play a prank (`motivation`). The phone did not have a lock (`lock`), so Val got in and took stupid pictures (`process`). Ash found out a few days later (`knowledge`), was very mad (`aftermath`), and never spoke to Val again (`status`). 
 
 To some extent, this structure might have been super-imposed in the story editing process. Coded raw stories can be checked for comparison.
 
 # Code & subcode frequency
-The distribution of codes and subcodes is likely too rich to visualize in a single visualization. For instance, a barplot, even without the labels, is not helpful:
+The distribution of codes and subcodes is likely too rich to visualize in a single visualization. For instance, a bar chart, even without the labels, is not helpful:
 ```{r}
 codings %>%
   ggplot() +
@@ -218,13 +218,13 @@ codings %>%
   coord_flip()
 
 ```
-Raters were not able to distinguish between codes or subcodes, but consolidating subcodes into codes may be informative. We'll next look at the distribution of codes and subcodes from both perpectives. For each category, we'll first represent the distribution of codings as raters saw them, and then consolidated into codes.
+Raters had no way to distinguish between codes or subcodes, but consolidating subcodes into codes may be informative. We'll next look at the distribution of codes and subcodes from both perspectives For each category, we'll first represent the distribution of codings as raters saw them, and then consolidated into codes.
 
 > TODO: revisit single plot with subcodes consolidated
 
 *Observations:*
 
-Even if the barchart with all categories is not very informative, some observations can be drawn. As expected, all categories, except for `process` and `aftermath`, have exactly has many observations as there are observational units. Category `process` has a higher number, because it was common that more than one process was involved in an intrusion story. Category `aftermath` has fewer observations, because many stories did not express emotional consequences to the level required by the coding criteria.
+Even if the bar chart with all categories is not very informative, some observations can be drawn. As expected, all categories, except for `process` and `aftermath`, have exactly has many observations as there are observational units. Category `process` has a higher number, because it was common that more than one process was involved in an intrusion story. Category `aftermath` has fewer observations, because many stories did not express emotional consequences to the level required by the coding criteria.
 
 ```{r}
 # barplots will be created with the same functions (below) for consistency.
@@ -298,9 +298,9 @@ barplot_category(
 
 - Stories of intrusions were passive subjects were coded as `friends` were also common.
 
-- Non-intimate types of relationships are distinguished by subcodes, while `intimate`has not subcodes. The code could have subcodes indicating wether it is a current, former, or aspirational type of relationship, has the code description suggests. Issue is worthy of revisitation.
+- Non-intimate types of relationships were distinguished by subcodes, while `intimate` did not provide subcodes. The code could have subcodes indicating whetherit is a current, former, or aspirational type of relationship, has the code description suggests. Issue is worthy of revisiting
 
-- It is conceivable that the relationship being intimate or non-intimate is a preponderant factor on how stories of intrusions progress. This hypothesis is also worth revisitation.
+- It is conceivable that the relationship being intimate or non-intimate is a preponderant factor on how stories of intrusions progress. This hypothesis is also worth revisiting.
 
 ## Category `opportunity`
 The following types of intrusion opportunities were coded:
@@ -322,15 +322,15 @@ barplot_category(
 ```
 *Observations:*
 
-* Raters understood intrusions happening, in the vast majority of cases, when devices were left unattended by the passive subject.
+* Raters understood intrusions happening, in the majority of cases, when devices were left unattended by the passive subject.
 
-* Raters found several instantiations where devices were left temporarily unattended. Most commonly, they found stories to indicate devices being unattended while their owners went to the bathroom (code `unattended-bathroom`). Raters also found stories where devices were left unnatended in locations often deemed "trusted", such as the home or office, while passive subject went somewhere else, for instance to run errands, or to a meeting (codes `unattended-outside`, and `unattended-meeting`); and stories where passive subjects were asleep (`unattended-asleep`). These stories of intrusions thus substantiate the questioning of common assumptions of trustworthyness associated with locations.
+* Raters found several instantiations where devices were left temporarily unattended. Most commonly, they found stories to indicate devices being unattended while their owners went to the bathroom (code `unattended-bathroom`). Raters also found stories where devices were left unattended in locations often deemed "trusted", such as the home or office, while passive subject went somewhere else, for instance to run errands, or to a meeting (codes `unattended-outside`, and `unattended-meeting`); and stories where passive subjects were asleep (`unattended-asleep`). These stories of intrusions thus substantiate the questioning of common assumptions of trustworthiness associated with locations.
 
 * Situations where the opportunity for access was created by deceiving the passive subject (code `opportunity-deception`), or through access to a secondary device (code `opportunity-secondarydevice`) were much less common. Because those may be extreme cases, it is worth revisiting the association of these codes with, at least, motivation and process codes.
 
-* The commonality of the "bathroom scenario" seem to suggest that intrusions can occur in very little time. This aspect might be of importance for system design. For instance, intrusion detection algorithms which require an substantial period of behavior acquisition prior to classification may be innefective in practice.
+* The commonality of the "bathroom scenario" seem to suggest that intrusions can occur in very little time. This aspect might be of importance for system design. For instance, intrusion detection algorithms which require a substantial period of behavior acquisition prior to classification may be ineffective in practice.
 
-* It can also be speculated that the "bathroom scenario" provides a set of relatively safe, or otherwise favorable, conditions for active subjects. Such conditions may include a *predictable* length of time alone with the device, *forewarning* that the passive subject may return (e.g. aural notice of flushing, shower shuting off, or doors opening), *social etiquette* in favor of leaving the device unnattended (e.g. so as not to signal distrust), and passive subject's *trust* they are in a safe environment.
+* It can also be speculated that the "bathroom scenario" provides a set of relatively safe, or otherwise favorable, conditions for active subjects. Such conditions may include a *predictable* length of time alone with the device, *forewarning* that the passive subject may return (e.g. aural notice of flushing, shower shutting off, or doors opening), *social etiquette* in favor of leaving the device unattended (e.g. so as not to signal distrust), and passive subject's *trust* they are in a safe environment.
 
 ## Category `motivation`
 The following types of intrusion opportunities were coded:
@@ -352,17 +352,17 @@ barplot_category(
 ```
 *Observations:*
 
-* "Control" was defined as the passive subject wanting "to learn about, or influence" relationships between the passive subject and third parties. By a vast majority, codings relating to control were the most selected by raters, suggesting that these is the most common motivation for intrusion among parties known to each other.
+* "Control" was defined as the passive subject wanting "to learn about, or influence" relationships between the passive subject and third parties. By a clear majority, codings relating to control were the most selected by raters, suggesting that these is the most common motivation for intrusion among parties known to each other.
 
-* A desire to control possible intimate relationships of the passive subject (code `control-intimate`) is the most commonly selected subcode. Research on technology-mediated intimate partner abuse has previously identified control as an important, or even principal motivation (although often "control" is construed more broadly). Although definitions of abuse vary, our observation when reading the stories was that there were few examples that would undoubetedly qualify as intimate partner abuse. 
+* A desire to control possible intimate relationships of the passive subject (code `control-intimate`) is the most commonly selected subcode. Research on technology-mediated intimate partner abuse has previously identified control as an important, or even principal motivation (although often "control" is construed more broadly). Although definitions of abuse vary, our observation when reading the stories was that there were few examples that would undoubtedly qualify as intimate partner abuse. 
 
 * Nevertheless, this evidence does seem to lend support a more modest claim, that intrusions to smartphones can be a component of controlling behaviors between intimate partners. Furthermore, this data suggest that technology-enabled controlling behaviors may be better understood as existing on a continuum, and not necessarily under a dichotomy between abusive vs. healthy. This issue is worth revisiting, at least by listing examples.
 
-* Other, less common, motivations which raters coded were using some functionality of the device (code `convinience`), playing pranks (code `prank`), and exploitation (`exploit`).
+* Other, less common, motivations which raters coded were using some functionality of the device (code `convenience`), playing pranks (code `prank`), and exploitation (`exploit`).
 
-* Exploitation, in particular, was rated with subcodes that refer to behaviors that are commonly seen as extremely pernicious, namely stealing of devices (code `exploit-steal`), stealing of business information (`exploit-business`), or stealing of sexualizable media content (`exploit-sexploit`).
+* Exploitation was rated with subcodes that refer to behaviors that are commonly seen as extremely pernicious, namely stealing of devices (code `exploit-steal`), stealing of business information (`exploit-business`), or stealing of sexualizable media content (`exploit-sexploit`).
 
-* These exploitative motivations often deserve a great deal of attention, both in research and in media. Alarm over these types of occurences has informed interventions such as security technology, security advice, public policy, and business investment. In contrast, control-motivated intrusions, which do appear in the data much more commonly, have at best received less attention, and at worst been regarded as unimportant or unadressable. We can only speculate, but a reason behind this assimetry may be that, in control-motivated intrusions, it is often more difficult to assign polarizing roles to parties, such as perpetrator vs. victim. For instance, when an active subject seeks confirmation of partner infidelity, and finds it, it may be more difficul to label them "perpetrators of intrusion", and thus to strike enough fear to prompt interventions against those types of intrusions. Interventions, such as security technologies directed at preventing control-motivated intrusions by intimate partners would, conveivably, be seen as enabling behaviors commonly deemed censurable, such as intimate partner infidelity.
+* These exploitative motivations often deserve a great deal of attention, both in research and in media. Alarm over these types of occurrences has informed interventions such as security technology, security advice, public policy, and business investment. In contrast, control-motivated intrusions, which do appear in the data much more commonly, have at best received less attention, and at worst been regarded as unimportant or unaddressable. We can only speculate, but a reason behind this asymmetry may be that, in control-motivated intrusions, it is often more difficult to assign polarizing roles to parties, such as perpetrator vs. victim. For instance, when an active subject seeks confirmation of partner infidelity, and finds it, it may be more difficult to label them "perpetrators of intrusion", and thus to strike enough fear to prompt interventions against those types of intrusions. Interventions, such as security technologies directed at preventing control-motivated intrusions by intimate partners would, conceivably, be seen as enabling behaviors commonly deemed censurable, such as intimate partner infidelity.
 
 ## Category `lock`
 The following types of intrusion opportunities were coded:
