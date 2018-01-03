@@ -416,23 +416,49 @@ codings %>%
 ```
 
 Distributed has follows:
+
 ```{r}
 barplot_category(
   codings %>% filter(category == "process")
   )
 ```
 
-
 *Observations:*
 
+* Given the large number of processes which were coded, it makes sense to find clusters of co-occurence. Because there is co-occurence, the frequency charts do not inform on the proportion of stories in which each code or code-subcode was found. These observations should be revised once these factors are taken into account.
+
+* The vast majority of processes found in stories were processes of information gathering. Active subjects inspected a wide variety of information sources, including media files such as photos, social media activity, contacts, notifications, apps installed, call logs, or internet history. But, in the vast majority of cases, active subjects inspected text-based records of conversations, such as text messages, instant messages, or emails.
+
+* Solely by frequency, it can be speculated that there is a connection between active subjects being motivated by controlling relationships of the passive subject, and conducting intrusions for information gathering. This claim can be further examined by looking at relationships between these codes. If true, it starts to paint a picture of the most common type of intrusions found in the stories: intimate partners, finding opportunities optimal for avoiding detection, and undeterred by secret-based logs, exert their desire for control by snooping on their partner's communication with third parties.
+
+* Some stories referenced intrusions that included tampering with the device, exfiltrating data, and impersonating the passive subject. 
+
+* Some subcodes of `tampering` are suggestive of having a associations with different sets of `motivation` codes, and leading to different types of aftermath (categories `aftermath` and `status`). Changing settings (`tampering-settings`) or contacts (`tampering-contacts`), taking photos (`tampering-media`), and even deleting content (`tampering-deletion`) might be associated with several types of intrusions that might not be considered "high-stakes", such as playing pranks or attempting to expediently accomplish some task which the passive subject might not object to. However, implanting surveillance software (`tampering-implant`) appears particularly pernicious, and is a marker explicitly mentioned in prior research on technology-mediated intimate partner abuse. 
+
+* Subcodes of exfiltration to another medium (of contacts, conversations, and visual media), and the single subcode of impersonation (in conversations with third parties) are also ambiguous on their own, warranting additional examination of co-occurence with motivations and aftermath, and examination of co-ocurrence with other processes.
 
 
-* 
 
-
-* Given the large number of processes which were coded, it might make sense to find clusters of co-occurence.
-
-
-> TODO: explore adding the code description as either axes or labels.
+> TODO: explore adding the code description as either axes or labels. At least, order the list of description by the same order as bar chart.
 
 > TODO: Re-write a prototypical story with the most common code in each category
+
+## Category `knowledge`
+The following types of ways in which the active subject leaned about the intrusions were coded:
+```{r}
+codings %>%
+  filter(category == "knowledge") %>%
+  group_by(codename) %>%
+  summarise(description = unique(description)) %>%
+  arrange(codename) %>%
+  knitr::kable()
+```
+
+
+Distributed has follows:
+```{r}
+barplot_category(
+  codings %>% filter(category == "knowledge")
+  )
+```
+*Observations:*
