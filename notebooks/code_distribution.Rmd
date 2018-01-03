@@ -393,6 +393,44 @@ barplot_category(
 
 * The subcodes further qualify these claims for different types of authentication methods. Subcodes `innefective-known`, `innefective-observed`, and `innefective-easy`, signify that secret-based authentication methods were innefective due to known constraints, respectively password-sharing practices, shoulder-surfing, and informed guessing. In contrast, only subcode `innefective-unlocked` may apply to biometric authentication. Is is worth revising if these codings are indeed associates with biometric methods. Furthermore, it is worth revisiting their association with `motivation-deception`.
 
+## Category `process`
+
+> The code name "snooping" is more informal than the remaining code names in the process category, i.e. "tampering", "exfiltration", and "impersonation". Since it's only a label for the description raters actually used, there is no problem in changing after the fact. Provisionally, "snooping" was renamed to "information gathering".
+
+```{r echo=T}
+codings = 
+  codings %>% 
+  mutate_at(vars(codename, code), gsub,  pattern = "snooping",
+    replacement = "informationgathering")
+```
+
+
+The following types of processes were coded:
+```{r}
+codings %>%
+  filter(category == "process") %>%
+  group_by(codename) %>%
+  summarise(description = unique(description)) %>%
+  arrange(codename) %>%
+  knitr::kable()
+```
+
+Distributed has follows:
+```{r}
+barplot_category(
+  codings %>% filter(category == "process")
+  )
+```
+
+
+*Observations:*
+
+
+
+* 
+
+
+* Given the large number of processes which were coded, it might make sense to find clusters of co-occurence.
 
 
 > TODO: explore adding the code description as either axes or labels.
