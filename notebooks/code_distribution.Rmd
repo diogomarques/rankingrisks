@@ -395,7 +395,7 @@ barplot_category(
 
 ## Category `process`
 
-> The code name "snooping" is more informal than the remaining code names in the process category, i.e. "tampering", "exfiltration", and "impersonation". Since it's only a label for the description raters actually used, there is no problem in changing after the fact. Provisionally, "snooping" was renamed to "information gathering".
+> !TRANSFORMATION!: The code name "snooping" is more informal than the remaining code names in the process category, i.e. "tampering", "exfiltration", and "impersonation". Since it's only a label for the description raters actually used, there is no problem in changing after the fact. Provisionally, "snooping" was renamed to "information gathering".
 
 ```{r echo=T}
 codings = 
@@ -462,3 +462,48 @@ barplot_category(
   )
 ```
 *Observations:*
+
+* Raters judged that in most stories, passive subjects learned about intrusions. With subcodes, raters indicated three ways to knowledge: findings active subjects in the act (subcode `yes-redhanded`), self-admission by active subjects (subcode `yes-admission`), and finding clues leading to a suspicious on unauthorized access (subcode `yes-clues`). Several types of clues are suggested in the subcode description, and some particular examples would illustrate similarities and differences of possible interest.
+
+* This distribution between learning of intrusions, or not, might be an artifact of the data-gathering: it is reasonable to assumed that active subjects are likely to under-report, and thus most stories were told by passive subjects, which can only tell them if they eventually learned of the intrusion. However, as our Facebook list experiment indicated, there is a comparable bias on both the active and the passive subject sides. Thus, it might be true that eventually, a larger portion of intrusions that people remember are the ones where eventually the passive subject learned of the intrusions.
+
+## Category `aftermath`
+
+> !TRANSFORMATION!: In this category, only codes, and not subcodes, were attributed. There is a natural structure between passive and negative types of aftermath, as evidenced in the code descriptions. The data could be trannsformed to superimpose this distinction as a code, but for now the bar chart seems illustrative enough.
+
+The following types of explicitly-referenced sentiments towards the intrusion were coded:
+```{r}
+codings %>%
+  filter(category == "aftermath") %>%
+  group_by(codename) %>%
+  summarise(description = unique(description)) %>%
+  arrange(codename) %>%
+  knitr::kable()
+```
+
+
+Distributed has follows:
+```{r}
+barplot_category(
+  codings %>% filter(category == "aftermath")
+  )
+```
+*Observations:*
+
+* Sentiments were rated mostly as a control variable for perceptions of severity -- at the outset, we planned a second study were stories would be rated as to their severity, and it is reasonable to expect that readers would let their sentiments be influenced by the characters own sentiments.
+
+> BTW, something that will probably also perceptions of seveirty is whether the passive subject found the active subject to be engaged in marital or dating infidelity -- and this information is not coded.
+
+* Nevertheless, we can observe that, in the majority of cases, intrusions lead to negative sentiments, such as annoyment, anger, guilt, humiliation, pain, etc., on both the active and the passive subjects. In some cases, positive sentiments arose, such as amusement, satisfaction, or relied. 
+
+* Examining relationships of aftermath with prior categories should inform the origins and context of this distribution.
+
+* Like in the case of process codes, these charts are not relative to the proportion of stories, and subsequent analysis, for instance in the clustering step, should address that limitation, and re-open examination of these observations.
+
+
+
+> TODO: move transformations in process and aftermath to the beggining, or ammend tables in RQDA.
+
+> TODO: explore adding the code description as either axes or labels. At least, order the list of description by the same order as bar chart.
+
+> TODO: Re-write a prototypical story with the most common code in each category
