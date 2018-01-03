@@ -14,7 +14,7 @@ require(tidyverse)
 load("../data/codings.rda")
 ```
 
-These notes describe the codings attributed to the qualitative data by raters. This description step will be followed by constructing a typology of instances of unauthorized access.
+These notes describe the distribution of codings attributed to the qualitative data by raters. This description step will be followed by more in-detail exploratory analysis of initial observations, and by finally by constructing a typology of instances of unauthorized access.
 
 # Data
 Analysis is based on the `codings` dataset, in which each row represents a code attributed to a story. It looks like this:
@@ -34,7 +34,7 @@ Where:
 
 The dataset was created by the `retrieve_data.R` script, which retrieves it from the RQDA database, merging fields in several tables. No previous transformations were performed.
 
-This analysis will take top-down view, looking first at code categories, and progressively going deeper until reaching exemplary quotes. 
+This analysis will take top-down view, looking first at code categories, and then at codes and subcodes. 
 
 # Categories
 ## Descriptions
@@ -201,7 +201,7 @@ A more succinct visualization of this structural property could be made, but it 
 
 To some extent, this structure might have been super-imposed in the story editing process. Coded raw stories can be checked for comparison.
 
-# Code & subcode frequency
+# Code & subcode distribution
 The distribution of codes and subcodes is likely too rich to visualize in a single visualization. For instance, a bar chart, even without the labels, is not helpful:
 ```{r}
 codings %>%
@@ -393,7 +393,7 @@ barplot_category(
 
 * The subcodes further qualify these claims for different types of authentication methods. Subcodes `innefective-known`, `innefective-observed`, and `innefective-easy`, signify that secret-based authentication methods were innefective due to known constraints, respectively password-sharing practices, shoulder-surfing, and informed guessing. In contrast, only subcode `innefective-unlocked` may apply to biometric authentication. Is is worth revising if these codings are indeed associates with biometric methods. Furthermore, it is worth revisiting their association with `motivation-deception`.
 
-## Category `process`
+## Category `process` (list)
 
 > !TRANSFORMATION!: The code name "snooping" is more informal than the remaining code names in the process category, i.e. "tampering", "exfiltration", and "impersonation". Since it's only a label for the description raters actually used, there is no problem in changing after the fact. Provisionally, "snooping" was renamed to "information gathering".
 
@@ -438,11 +438,6 @@ barplot_category(
 * Subcodes of exfiltration to another medium (of contacts, conversations, and visual media), and the single subcode of impersonation (in conversations with third parties) are also ambiguous on their own, warranting additional examination of co-occurence with motivations and aftermath, and examination of co-ocurrence with other processes.
 
 
-
-> TODO: explore adding the code description as either axes or labels. At least, order the list of description by the same order as bar chart.
-
-> TODO: Re-write a prototypical story with the most common code in each category
-
 ## Category `knowledge`
 The following types of ways in which the active subject leaned about the intrusions were coded:
 ```{r}
@@ -467,7 +462,7 @@ barplot_category(
 
 * This distribution between learning of intrusions, or not, might be an artifact of the data-gathering: it is reasonable to assumed that active subjects are likely to under-report, and thus most stories were told by passive subjects, which can only tell them if they eventually learned of the intrusion. However, as our Facebook list experiment indicated, there is a comparable bias on both the active and the passive subject sides. Thus, it might be true that eventually, a larger portion of intrusions that people remember are the ones where eventually the passive subject learned of the intrusions.
 
-## Category `aftermath`
+## Category `aftermath` (list)
 
 > !TRANSFORMATION!: In this category, only codes, and not subcodes, were attributed. There is a natural structure between passive and negative types of aftermath, as evidenced in the code descriptions. The data could be trannsformed to superimpose this distinction as a code, but for now the bar chart seems illustrative enough.
 
@@ -484,8 +479,9 @@ codings %>%
 
 Distributed has follows:
 ```{r}
-barplot_category(
-  codings %>% filter(category == "aftermath")
+get_barplot_category(
+  codings %>% filter(category == "aftermath"),
+  consolidate = T
   )
 ```
 *Observations:*
@@ -500,10 +496,41 @@ barplot_category(
 
 * Like in the case of process codes, these charts are not relative to the proportion of stories, and subsequent analysis, for instance in the clustering step, should address that limitation, and re-open examination of these observations.
 
+## Category `status`
+The following types of resulting relationship status which were coded:
+```{r}
+codings %>%
+  filter(category == "status") %>%
+  group_by(codename) %>%
+  summarise(description = unique(description)) %>%
+  arrange(codename) %>%
+  knitr::kable()
+```
+
+
+Distributed has follows:
+```{r}
+get_barplot_category(
+  codings %>% filter(category == "status"),
+  consolidate = T
+  )
+```
+*Observations:*
+
+* Resulting relationship status was coded, like aftermath,  mostly as a control variable for perceptions of severity.
+
+* Most commonly, stories were not coded as evideding maintanence or change in relationship status, per the coding criteria. When status was rated, both maintenance and ending of relationships was found. 
+
+* Like aftermath, this category can be seen as an outcome variable, and should be interesting to analyze construing the preceding variables as predictors.
+
 
 
 > TODO: move transformations in process and aftermath to the beggining, or ammend tables in RQDA.
 
+> TODO: remove or substitute explitic NA in subcode table.
+
+> TODO: allow single tables for
+
 > TODO: explore adding the code description as either axes or labels. At least, order the list of description by the same order as bar chart.
 
-> TODO: Re-write a prototypical story with the most common code in each category
+> TODO: review and proof
