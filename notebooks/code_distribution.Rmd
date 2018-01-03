@@ -1,10 +1,10 @@
 ---
 title: "Overview of the coded qualitative data"
 output:
-  word_document:
-    toc: yes
   html_notebook:
     number_sections: yes
+    toc: yes
+  word_document:
     toc: yes
 ---
 ```{r, include=FALSE}
@@ -48,7 +48,7 @@ codings %>%
 ```
 
 ## Factor and list categories
-For most code categories, only one code was selected per story (as evidenced by *[Choose one]* in the code description). However, for code categories `process` and `aftermath`, raters were free to not choose any code, or to choose many (*[Choose all that apply]*). 
+For most code categories, only one code was selected per story (as evidenced by *[Choose one]* in the category description). However, for code categories `process` and `aftermath`, raters were free to not choose any code, or to choose many (*[Choose all that apply]*). 
 
 ### Factor categories
 Categories for which raters were only able to select one code can map directly to categorical variables, or factors. Each code (or code-subcode if available) represents a level of that factor.
@@ -220,8 +220,6 @@ codings %>%
 ```
 Raters had no way to distinguish between codes or subcodes, but consolidating subcodes into codes may be informative. We'll next look at the distribution of codes and subcodes from both perspectives For each category, we'll first represent the distribution of codings as raters saw them, and then consolidated into codes.
 
-> TODO: revisit single plot with subcodes consolidated
-
 *Observations:*
 
 Even if the bar chart with all categories is not very informative, some observations can be drawn. As expected, all categories, except for `process` and `aftermath`, have exactly has many observations as there are observational units. Category `process` has a higher number, because it was common that more than one process was involved in an intrusion story. Category `aftermath` has fewer observations, because many stories did not express emotional consequences to the level required by the coding criteria.
@@ -322,18 +320,21 @@ barplot_category(
 ```
 *Observations:*
 
-* Raters understood intrusions happening, in the majority of cases, when devices were left unattended by the passive subject.
+* Raters understood intrusions happening, in the majority of cases, when devices were left unattended by the passive subject. 
 
-* Raters found several instantiations where devices were left temporarily unattended. Most commonly, they found stories to indicate devices being unattended while their owners went to the bathroom (code `unattended-bathroom`). Raters also found stories where devices were left unattended in locations often deemed "trusted", such as the home or office, while passive subject went somewhere else, for instance to run errands, or to a meeting (codes `unattended-outside`, and `unattended-meeting`); and stories where passive subjects were asleep (`unattended-asleep`). These stories of intrusions thus substantiate the questioning of common assumptions of trustworthiness associated with locations.
+* Cases where intrusions happened after devices were voluntarily handed to the active subject (which fall under the `deception`code) were very rare. This difference, if reflective of a wider reality, suggests that security measures for devices at rest may be more impactful than security measures for addressing impromptu sharing scenarios. Several forces may be conspiring to make sharing scenarios less favourable for intrusions, including social etiquette, the probability of getting caught, and the hassle to sucessfully deceive the passive subject. It is worth revisting the relationship between use of deception, and the motivation, processes, and aftermath of the intrusion -- it may be the case that deception is associated with the least high-stakes cases, where getting caught is of no concern and not particular breach of social norms; or it may be the case that it is associated with the most high-stakes cases, where the hassle and risk of getting caught are worth the trouble, from the active subject's perspective.
 
-* Situations where the opportunity for access was created by deceiving the passive subject (code `opportunity-deception`), or through access to a secondary device (code `opportunity-secondarydevice`) were much less common. Because those may be extreme cases, it is worth revisiting the association of these codes with, at least, motivation and process codes.
+* Raters found several instantiations of devices being left temporarily unattended. Most commonly, they found stories to indicate devices being unattended while their owners went to the bathroom (code `unattended-bathroom`). Raters also found stories where devices were left unattended in locations often deemed "trusted", such as the home or office, while passive subject went somewhere else, for instance to run errands, or to a meeting (codes `unattended-outside`, and `unattended-meeting`); and stories where passive subjects were asleep (`unattended-asleep`). These stories of intrusions thus substantiate the questioning of common assumptions of trustworthiness associated with locations.
 
 * The commonality of the "bathroom scenario" seem to suggest that intrusions can occur in very little time. This aspect might be of importance for system design. For instance, intrusion detection algorithms which require a substantial period of behavior acquisition prior to classification may be ineffective in practice.
 
 * It can also be speculated that the "bathroom scenario" provides a set of relatively safe, or otherwise favorable, conditions for active subjects. Such conditions may include a *predictable* length of time alone with the device, *forewarning* that the passive subject may return (e.g. aural notice of flushing, shower shutting off, or doors opening), *social etiquette* in favor of leaving the device unattended (e.g. so as not to signal distrust), and passive subject's *trust* they are in a safe environment.
 
+* Situations where the opportunity for access came through access to a secondary device (code `opportunity-secondarydevice`) were not common, but still existed. These cases are also worth examining in comparison to unnatended access, as in both cases there is a low probability of getting caught.
+
+
 ## Category `motivation`
-The following types of intrusion opportunities were coded:
+The following types of motivation for intrusion were coded:
 ```{r}
 codings %>%
   filter(category == "motivation") %>%
@@ -365,7 +366,7 @@ barplot_category(
 * These exploitative motivations often deserve a great deal of attention, both in research and in media. Alarm over these types of occurrences has informed interventions such as security technology, security advice, public policy, and business investment. In contrast, control-motivated intrusions, which do appear in the data much more commonly, have at best received less attention, and at worst been regarded as unimportant or unaddressable. We can only speculate, but a reason behind this asymmetry may be that, in control-motivated intrusions, it is often more difficult to assign polarizing roles to parties, such as perpetrator vs. victim. For instance, when an active subject seeks confirmation of partner infidelity, and finds it, it may be more difficult to label them "perpetrators of intrusion", and thus to strike enough fear to prompt interventions against those types of intrusions. Interventions, such as security technologies directed at preventing control-motivated intrusions by intimate partners would, conceivably, be seen as enabling behaviors commonly deemed censurable, such as intimate partner infidelity.
 
 ## Category `lock`
-The following types of intrusion opportunities were coded:
+The following types of locking existence and effectiveness were coded:
 ```{r}
 codings %>%
   filter(category == "lock") %>%
@@ -384,8 +385,13 @@ barplot_category(
 ```
 *Observations:*
 
+* In the majority of stories, the matter of a lock did not came up, and the codebook intructed raters to not infer either absence or innefectiveness of a lock if not explicily indicated.
 
+* In two cases, locks were reported as effective. It should be notes that an effective lock does not impede any kind of unauthorized access: for instance, notification may be accessible. It is worth revisiting these stories to check wether that was case, or wether these stories should be excluded from analysis.
 
+* When locks were explicitly mentioned, raters found some stories where locks were not set (code `notset`), but in a majority of cases there were locks, but still were overcome by active subjects (code `ineffective`). This lends support to questioning the effectiveness of locking among socially-close adversaries.
+
+* The subcodes further qualify these claims for different types of authentication methods. Subcodes `innefective-known`, `innefective-observed`, and `innefective-easy`, signify that secret-based authentication methods were innefective due to known constraints, respectively password-sharing practices, shoulder-surfing, and informed guessing. In contrast, only subcode `innefective-unlocked` may apply to biometric authentication. Is is worth revising if these codings are indeed associates with biometric methods. Furthermore, it is worth revisiting their association with `motivation-deception`.
 
 
 
