@@ -1,14 +1,14 @@
 ---
 title: "Overview of the distribution of codes"
 output:
+  pdf_document:
+    toc: yes
   html_notebook:
     fig_caption: yes
     fig_width: 8
     fig_height: 5
     number_sections: yes
     theme: paper
-    toc: yes
-  pdf_document:
     toc: yes
   word_document:
     toc: yes
@@ -51,7 +51,7 @@ The category descriptions are as follows:
 codings %>%
   select(Category = category, Description = category.desc) %>%
   distinct() %>% 
-  knitr::kable()
+  knitr::kable(booktabs = T)# %>% kableExtra::
 ```
 
 ## Factor and list categories
@@ -84,6 +84,7 @@ codings %>%
   knitr::kable()
   
 ```
+
 Because the codes represent processes that occured in an observational unit, it makes sense to think of them as a list.
 
 ## Temporal structure
@@ -105,6 +106,7 @@ categories_ordered =
 categories_ordered %>%
   knitr::kable()
 ```
+
 This ordering can be applied to the category variable, for subsequent visualizations.
 ```{r}
 codings = 
@@ -156,6 +158,7 @@ To some extent, this structure might have been super-imposed in the story editin
 
 # Code & subcode distribution
 Given the number of codes and subcodes available to raters, visualizing them in a single graph is not ideal. For instance, a bar chart, even without the labels, is very dense:
+
 ```{r}
 codings %>%
   ggplot() +
@@ -171,6 +174,7 @@ codings %>%
   coord_flip()
 
 ```
+
 Some observations, however, still can be drawn. 
 
 1. There is a variety of code distributions within categories. Some codes or subcodes have very few observations, while others have many.
@@ -181,12 +185,13 @@ We'll next look at the distribution of codes and subcodes per category. Where ap
 
 ```{r}
 # barplots will be created with the same functions (below) for consistency.
-get_barplot_grid = function(data_subset) {
+get_barplot_grid = function(data_subset, main_size = 3/4) {
     cowplot::plot_grid(
       get_barplot_codenames(data_subset),# + cowplot::theme_cowplot(),
       get_barplot_aggregated(data_subset), #+ cowplot::theme_cowplot(),
-      ncol = 2,
-      rel_widths = c(2/3, 1/3)
+      nrow = 2,
+      rel_heights = c(main_size, 1-main_size),
+      align = "v"
     )
 }
 
@@ -205,7 +210,7 @@ get_barplot_aggregated = function(data_subset) {
     ylab("Consolidated frequency")
 }
 
-get_barplot_codenames = function(data_subset, width = 50) { 
+get_barplot_codenames = function(data_subset, width = 80) { 
   data_subset %>% 
   mutate(
     variable = glue(
@@ -223,27 +228,24 @@ get_barplot_codenames = function(data_subset, width = 50) {
     ) +
     coord_flip() +
     xlab(NULL) + 
-    ylab("Rater decision frequency")
+    ylab("Rater decision frequency") +
+  theme(
+    axis.text.y = 
+          element_text(
+            size = 10, 
+            hjust = 0
+            )
+    )
 }
 ```
 
 ## Category `relationshiptype`
 The following types of relationship were coded:
-```{r}
+
+```{r, fig.width=8}
 codings %>%
   filter(category == "relationshiptype") %>%
-  group_by(codename) %>%
-  summarise(description = unique(description)) %>%
-  arrange(codename) %>%
-  knitr::kable()
-```
-
-
-Distributed has follows:
-```{r, fig.width=8}
-codings %>% 
-  filter(category == "relationshiptype") %>%
-  get_barplot_grid()
+  get_barplot_grid() 
 
 ```
 *Observations:*
@@ -258,21 +260,13 @@ codings %>%
 
 ## Category `opportunity`
 The following types of intrusion opportunities were coded:
-```{r}
+
+```{r fig.width=8, fig.height=7}
 codings %>%
   filter(category == "opportunity") %>%
-  group_by(codename) %>%
-  summarise(description = unique(description)) %>%
-  arrange(codename) %>%
-  knitr::kable()
+  get_barplot_grid()
 ```
 
-Distributed has follows:
-```{r}
-barplot_category(
-  codings %>% filter(category == "opportunity")
-  )
-```
 *Observations:*
 
 * Raters judged that intrusions happened, in most stories, when devices were left unattended by the passive subject. 
@@ -290,22 +284,13 @@ barplot_category(
 
 ## Category `motivation`
 The following types of motivation for intrusion were coded:
-```{r}
+
+```{r, fig.width=8, fig.height=8.5}
 codings %>%
   filter(category == "motivation") %>%
-  group_by(codename) %>%
-  summarise(description = unique(description)) %>%
-  arrange(codename) %>%
-  knitr::kable()
+  get_barplot_grid()
 ```
 
-
-Distributed has follows:
-```{r}
-barplot_category(
-  codings %>% filter(category == "motivation")
-  )
-```
 *Observations:*
 
 * "Control" was defined as the passive subject wanting "to learn about, or influence" relationships between the passive subject and third parties. By a clear majority, codes related to control were the most selected by raters, suggesting that these is the most common motivation for intrusion among parties known to each other.
@@ -322,22 +307,13 @@ barplot_category(
 
 ## Category `lock`
 The following types of locking existence and effectiveness were coded:
-```{r}
+
+```{r, fig.width=8}
 codings %>%
   filter(category == "lock") %>%
-  group_by(codename) %>%
-  summarise(description = unique(description)) %>%
-  arrange(codename) %>%
-  knitr::kable()
+  get_barplot_grid()
 ```
 
-
-Distributed has follows:
-```{r}
-barplot_category(
-  codings %>% filter(category == "lock")
-  )
-```
 *Observations:*
 
 * In most stories, raters judged that mentions to either presence or effectiveness of locks were not present. The codebook instructed raters to not make inferences, but to code only explicit evidence.
@@ -352,7 +328,7 @@ barplot_category(
 
 ## Category `process` (list)
 
-> !TRANSFORMATION!: "snooping" was renamed to "information gathering". The code name "snooping" is more informal than the remaining code names in the process category, i.e. "tampering", "exfiltration", and "impersonation". Since it's only a label for the description raters actually used, there is no problem in changing after the fact.
+> TRANSFORMATION: "snooping" was renamed to "information gathering". The code name "snooping" is more informal than the remaining code names in the process category, i.e. "tampering", "exfiltration", and "impersonation". Since it's only a label for the description raters actually used, there is no problem in changing after the fact.
 
 ```{r echo=T}
 codings = 
@@ -363,21 +339,11 @@ codings =
 
 
 The following types of processes were coded:
-```{r}
+
+```{r, fig.width=8, fig.height=10}
 codings %>%
   filter(category == "process") %>%
-  group_by(codename) %>%
-  summarise(description = unique(description)) %>%
-  arrange(codename) %>%
-  knitr::kable()
-```
-
-Distributed has follows:
-
-```{r}
-barplot_category(
-  codings %>% filter(category == "process")
-  )
+  get_barplot_grid(main_size = 3.5/4)
 ```
 
 *Observations:*
@@ -399,22 +365,13 @@ barplot_category(
 
 ## Category `knowledge`
 The following types of ways in which active subjects learned about intrusions were coded:
-```{r}
+
+```{r, fig.width=8}
 codings %>%
   filter(category == "knowledge") %>%
-  group_by(codename) %>%
-  summarise(description = unique(description)) %>%
-  arrange(codename) %>%
-  knitr::kable()
+  get_barplot_grid(main_size = 3/4)
 ```
 
-
-Distributed has follows:
-```{r}
-barplot_category(
-  codings %>% filter(category == "knowledge")
-  )
-```
 *Observations:*
 
 * Raters judged that in most stories passive subjects eventually learned about intrusions. With subcodes, raters indicated three paths to knowledge: findings active subjects in the act (subcode `yes-redhanded`), self-admission by active subjects (subcode `yes-admission`), and finding clues leading to a suspicious on unauthorized access (subcode `yes-clues`). Several types of clues are suggested in the subcode description, and some particular examples would illustrate similarities and differences of possible interest.
@@ -424,23 +381,13 @@ barplot_category(
 ## Category `aftermath` (list)
 
 The following types of explicitly-referenced sentiments towards the intrusion were coded:
-```{r}
+
+```{r, fig.width=8}
 codings %>%
   filter(category == "aftermath") %>%
-  group_by(codename) %>%
-  summarise(description = unique(description)) %>%
-  arrange(codename) %>%
-  knitr::kable()
+  get_barplot_codenames()
 ```
 
-
-Distributed has follows:
-```{r}
-get_barplot_category(
-  codings %>% filter(category == "aftermath"),
-  consolidate = T
-  )
-```
 *Observations:*
 
 * Sentiments were rated mostly as a control variable for perceptions of severity -- at the outset, we planned a second study were stories would be rated as to their severity, and it is reasonable to expect that readers would let their sentiments be influenced by the characters own sentiments.
@@ -455,23 +402,13 @@ get_barplot_category(
 
 ## Category `status`
 The following types of resulting relationship status were coded:
+
 ```{r}
 codings %>%
   filter(category == "status") %>%
-  group_by(codename) %>%
-  summarise(description = unique(description)) %>%
-  arrange(codename) %>%
-  knitr::kable()
+  get_barplot_codenames() 
 ```
 
-
-Distributed has follows:
-```{r}
-get_barplot_category(
-  codings %>% filter(category == "status"),
-  consolidate = T
-  )
-```
 *Observations:*
 
 *	Resulting relationship status was coded, like aftermath, mostly as a control variable for perceptions of severity.
@@ -480,29 +417,14 @@ get_barplot_category(
 
 *	Like aftermath, this category can be seen as an outcome variable, and could analyzed as being predicted by preceding code categories.
 
-# TODOs
-
-- Move mid-notebook transformations in `process`subcodes somewhere else, e.g. RQDA tables or retrieval script.
-
-- Remove "-NA"" in axis of bar charts for aggregated codes.
-
-- Explore adding the code description as either axes or labels; 
-
-- Re-inspect codings in RQDA.
-
-- RQDA: Correct typos in category and code descriptions
-
-- Consider coding whether the passive subject was engaged in marital or dating infidelity.  This dimension could affect perceptions of severity. This could be done after regression analysis of severity ratings, if there indication that adding this variable could reduce variance.
-
-```{r}
-
-get_barplot_codenames(codings %>% filter(category == "status"))
-get_barplot_aggregated(codings %>% filter(category == "status"))
-codings %>% filter(category == "process") %>% get_barplot_grid
-  
-
-
-
-
+```{r echo=T}
+# TODO:
+# - Move mid-notebook transformations in `process`subcodes somewhere else, e.g. RQDA tables or retrieval script.
+#- RQDA: Re-inspect codings in RQDA.
+#- RQDA: Correct typos in category and code descriptions
+#- Consider coding whether the passive subject was engaged in marital or dating infidelity.  This dimension could affect perceptions of severity. This could be done after regression analysis of severity ratings, if there indication that adding this variable could reduce variance.
 ```
+
+
+# TODOs
 
