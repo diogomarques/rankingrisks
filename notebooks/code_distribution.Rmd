@@ -1,10 +1,10 @@
 ---
-title: "Overview of the coded qualitative data"
+title: "Overview of the distribution of codes"
 output:
+  word_document:
+    toc: yes
   html_notebook:
     number_sections: yes
-    toc: yes
-  word_document:
     toc: yes
 ---
 ```{r, include=FALSE}
@@ -14,25 +14,25 @@ require(tidyverse)
 load("../data/codings.rda")
 ```
 
-These notes describe the distribution of codings attributed to the qualitative data by raters. This description step will be followed by more in-detail exploratory analysis of initial observations, and by finally by constructing a typology of instances of unauthorized access.
+These notes describe the distribution of codings attributed by raters to the qualitative data, and raises exploratory explanations. This exploration step excludes examination of such explanations. Other notebooks will examine the possible explanations raised here, for instance through by probing relationships between codes, or extracting exemplary quotations. Similarly, building of a typology will appear elsewhere.
 
 # Data
 Analysis is based on the `codings` dataset, in which each row represents a code attributed to a story. It looks like this:
 
 ```{r}
-str(codings, vec.len = 1, ncharmax = 80)
+glimpse(codings)
 ```
 Where:
 
 - `fid` is the story identifier
 - `codename` is a code attributed by a rater, following a \<category\>-\<code\>-\<subcode\> convention.
 - `category`, `code`, `subcode` unfold the coding convention
-- `char_fid`is the total number of characters in the story
+- `char_fid` is the total number of characters in the story
 - `char_start` and `char_end` are characters delimiting the excerpt for which the code was attributed
 - `description` is the description of codes or subcodes, formulated as an answer to a rating question
 - `category.desc` is the description of the category, formulated as a rating question
 
-The dataset was created by the `retrieve_data.R` script, which retrieves it from the RQDA database, merging fields in several tables. No previous transformations were performed.
+The pair (`fid`, `codename`) is the primary key. The dataset was created by the `retrieve_data.R` script, which retrieves it from the RQDA database, and merges fields in several tables. No previous transformations were performed.
 
 This analysis will take top-down view, looking first at code categories, and then at codes and subcodes. 
 
@@ -48,7 +48,7 @@ codings %>%
 ```
 
 ## Factor and list categories
-For most code categories, only one code was selected per story (as evidenced by *[Choose one]* in the category description). However, for code categories `process` and `aftermath`, raters were free to not choose any code, or to choose many (*[Choose all that apply]*). 
+For most code categories, raters were tasked with selecting one code per story, as evidenced by *[Choose one]* in the category description. However, for code categories `process` and `aftermath`, raters were free to choose any number codes, as evidenced by *[Choose all that apply]*. These options translate into two different kinds of categories: *factor categories* and *list categories*.
 
 ### Factor categories
 Categories for which raters were only able to select one code can map directly to categorical variables, or factors. Each code (or code-subcode if available) represents a level of that factor.
@@ -66,19 +66,9 @@ codings %>%
 Some levels correspond to codes (following the category-code convention), and some correspond to subcodes (category-code-subcode). Because the codebook was designed to not allow selection of codes when subcodes were available, there is no overlap.
 
 ### List categories
-Categories `process` and `aftermath` do not enjoy the same property of being easily transformed into a factor. They are, instead, list variables. For each story, each category maps to a list of codes or code-subcodes which may have been chosen by the rater. The list can be empty or have as many elements as there are options.
+Categories `process` and `aftermath` do not enjoy the same property of being easily transformed into factors. They are, instead, list variables. For each story, each category maps to a list of codes or code-subcodes which may have been chosen by raters. The list can be empty or have as many elements as there are options.
 
-For instance, in the process category, stories were often rated with more than one code. Story 2, for instance, has 5 process codes.
-
-```{r include=FALSE}
-codings %>%
-  filter(category == "process") %>%
-  select(story = fid, codename) %>%
-  group_by(story) %>%
-  summarise(n_process_codes = n()) %>%
-  filter(n_process_codes > 1) 
-  
-```
+For instance, stories were often rated with more than one code in the `process` category. Story 2, for instance, was attributed 5 `process` codes.
 
 ```{r}
 codings %>% 
@@ -87,42 +77,12 @@ codings %>%
   knitr::kable()
   
 ```
-Because the codes represent processes that occured in an observational unit, it makes sense to think of them as list.
-
-### Spreading the data
-
-> TODO: Wide representation not needed here. Move to structure notebook.
-
-Using this distinction of factor and list codes, we can now prepare a tidy dataset, `codings_wide`, in which each row represents an observation (a story), and each column represents a category. Depending on the type of category, a cell will either contain a level of a factor, or a list of codes/subcodes (which may be empty), represented as a vector.
-
-```{r}
-codings_wide = 
-  codings %>% 
-  select(fid, category, codename) %>%
-  group_by(fid, category) %>%
-  # convert all codes per fid/category into lists
-  summarise(codename_list = list(codename)) %>%
-  # make a column per category
-  spread(category, codename_list) %>%
-  # clean-up factor categories
-  mutate_at(vars(-aftermath, -process), unlist) %>%
-  # substitute NULLs in list categories for empty lists
-  # with functional magic
-  mutate(aftermath = map(aftermath, ~ . %||% character(0))) %>%
-  mutate(process = map(process, ~ . %||% character(0))) %>%
-  as_data_frame()
-```
-
-The first few rows of the widen dataset look like this:
-
-```{r}
-knitr::kable(head(codings_wide))
-```
+Because the codes represent processes that occured in an observational unit, it makes sense to think of them as a list.
 
 ## Temporal structure
 Since stories were collected through a narrative device, it is expectable that code categories follow a temporal pattern. 
 
-The dataset contains an indication of the first character associated with a coding, as `chart_start`, and the total story length, as `char_fid`. We can calculate a relative location in the text (from 0 to 1) where codes were assigned. We can then order categories by the mean relative location where codings started.
+The dataset contains an indication of the first character associated with a coding, as `chart_start`, and the total story length, as `char_fid`. From those, a relative location in the text (from 0 to 1) where codes were assigned can be calculated. Categories can then be ordered by the mean relative location where codings started:
 
 ```{r}
 categories_ordered = 
@@ -138,22 +98,18 @@ categories_ordered =
 categories_ordered %>%
   knitr::kable()
 ```
-The ordered categories are stored as `categories_ordered` dataset, to recover the ordering in subsequent visualizations.  This ordering is useful, for instance, for ordering the columns in the `codings_wide` dataset: 
+This ordering can be applied to the category variable, for subsequent visualizations.
 ```{r}
-codings_wide = 
-  codings_wide %>%
-  select(fid, categories_ordered$category)
-str(codings_wide, max.level = 1, vec.len = 1)
+codings = 
+  codings %>%
+  mutate(category = factor(category, levels = categories_ordered$category))
 ```
 
-Instead of looking just at the mean, we can also see the distribution of relative start characters across categories. One way is with a violin plot:
+Instead of looking just at the mean, we can also see the distribution of relative start characters across categories, for instance with a violin plot:
 
 ```{r}
 codings %>% 
-  mutate(
-    relative_start = char_start / char_fid,
-    category = factor(category, levels = categories_ordered$category)
-    ) %>%
+  mutate(relative_start = char_start / char_fid) %>%
   ggplot +
   aes(
     x = category, 
@@ -162,14 +118,11 @@ codings %>%
   geom_violin(scale = "width", trim = F, draw_quantiles = c(0.5)) +
   geom_point(alpha = 1/5)
 ```
-Alternative, with the point range geom and coordinates flipped:
+Violins are not very compact. An alternative, which may be more suitable for publication, is a vertical point range plot.
 
 ```{r}
 codings %>% 
-  mutate(
-    relative_start = char_start / char_fid,
-    category = factor(category, levels = rev(categories_ordered$category))
-    ) %>%
+  mutate(relative_start = char_start / char_fid) %>%
   ggplot +
   aes(
     x = category, 
@@ -181,28 +134,21 @@ codings %>%
     fun.ymin = min,
     geom = "pointrange"
   ) +
-  geom_point(alpha = 1/10) + 
+  geom_point(alpha = 1/5) + 
   coord_flip()
 
 ```
 
-
 *Observations:*
 
-Centering stories around the instance or pattern of unauthorized access, the categories can be seen as reflecting three moments in time: *before*, *during*, and *after*.
-
-1. Before: code categories `relationshiptype`, `opportunity`, and `motivation`.
-2. During: code categories `lock`, and `process`.
-3. After: code categories `knowledge`, `aftermath`, and `status`.
-
-A more succinct visualization of this structural property could be made, but it seems unnecessary for now. (I previously tried `ggraph`, with a circular representation, and was not happy with the results.) The structure does reflect our observations of how the stories usually progressed, such as the following fictitious example:
+The temporal structure does reflect a narrative structure, and matches our observations of how the stories usually progressed, such as the following fictitious example:
 
 > Ash and Val were friends (`relationshiptype`). Ash went to the bathroom and left the phone behind (`opportunity`). Val wanted to play a prank (`motivation`). The phone did not have a lock (`lock`), so Val got in and took stupid pictures (`process`). Ash found out a few days later (`knowledge`), was very mad (`aftermath`), and never spoke to Val again (`status`). 
 
 To some extent, this structure might have been super-imposed in the story editing process. Coded raw stories can be checked for comparison.
 
 # Code & subcode distribution
-The distribution of codes and subcodes is likely too rich to visualize in a single visualization. For instance, a bar chart, even without the labels, is not helpful:
+Given the number of codes and subcodes available to raters, visualizing them in a single graph is not ideal. For instance, a bar chart, even without the labels, is very dense:
 ```{r}
 codings %>%
   ggplot() +
@@ -218,11 +164,13 @@ codings %>%
   coord_flip()
 
 ```
-Raters had no way to distinguish between codes or subcodes, but consolidating subcodes into codes may be informative. We'll next look at the distribution of codes and subcodes from both perspectives For each category, we'll first represent the distribution of codings as raters saw them, and then consolidated into codes.
+Some observations, however, still can be drawn. 
 
-*Observations:*
+1. There is a variety of code distributions within categories. Some codes or subcodes have very few observations, while others have many.
 
-Even if the bar chart with all categories is not very informative, some observations can be drawn. As expected, all categories, except for `process` and `aftermath`, have exactly has many observations as there are observational units. Category `process` has a higher number, because it was common that more than one process was involved in an intrusion story. Category `aftermath` has fewer observations, because many stories did not express emotional consequences to the level required by the coding criteria.
+2. As expected, all categories, except for `process` and `aftermath`, have exactly has many observations as there are observational units. Category `process` has a higher number, because it was common that more than one process was involved in an intrusion story. Category `aftermath` has fewer observations, because many stories did not express emotional consequences to the level required by the coding criteria.
+
+We'll next look at the distribution of codes and subcodes per category. Where applicable, codes will be shown both as raters saw them, and consolidated into codes.
 
 ```{r}
 # barplots will be created with the same functions (below) for consistency.
@@ -294,11 +242,11 @@ barplot_category(
 
 - In most stories, the relationship between subjects was coded as `intimate`. 
 
-- Stories of intrusions were passive subjects were coded as `friends` were also common.
+- Of the non-intimate type of relationship subcodes, `friends` was much more commonly selected than other available types, namely `acquaintance`, `family`, or `professional`.
 
-- Non-intimate types of relationships were distinguished by subcodes, while `intimate` did not provide subcodes. The code could have subcodes indicating whetherit is a current, former, or aspirational type of relationship, has the code description suggests. Issue is worthy of revisiting
+- It is conceivable that relationships being intimate or non-intimate is a preponderant factor on how stories progress and their eventual outcomes. Relationships between these codes, and all subsequent codes, could reveal the relationship type as very significant dimension.
 
-- It is conceivable that the relationship being intimate or non-intimate is a preponderant factor on how stories of intrusions progress. This hypothesis is also worth revisiting.
+- Non-intimate types of relationships were distinguished by subcodes, while `intimate` was a code without subcodes. Subcodes indicating whether it is a current, former, or aspirational type of relationship, has the code description suggests, could be added, if there's any indication that such distinctions could have an impact on other aspects of stories.
 
 ## Category `opportunity`
 The following types of intrusion opportunities were coded:
@@ -311,7 +259,6 @@ codings %>%
   knitr::kable()
 ```
 
-
 Distributed has follows:
 ```{r}
 barplot_category(
@@ -320,17 +267,17 @@ barplot_category(
 ```
 *Observations:*
 
-* Raters understood intrusions happening, in the majority of cases, when devices were left unattended by the passive subject. 
+* Raters judged that intrusions happened, in most stories, when devices were left unattended by the passive subject. 
 
-* Cases where intrusions happened after devices were voluntarily handed to the active subject (which fall under the `deception`code) were very rare. This difference, if reflective of a wider reality, suggests that security measures for devices at rest may be more impactful than security measures for addressing impromptu sharing scenarios. Several forces may be conspiring to make sharing scenarios less favourable for intrusions, including social etiquette, the probability of getting caught, and the hassle to sucessfully deceive the passive subject. It is worth revisting the relationship between use of deception, and the motivation, processes, and aftermath of the intrusion -- it may be the case that deception is associated with the least high-stakes cases, where getting caught is of no concern and not particular breach of social norms; or it may be the case that it is associated with the most high-stakes cases, where the hassle and risk of getting caught are worth the trouble, from the active subject's perspective.
+* Cases where intrusions happened after devices were voluntarily handed to the active subject (which fall under the `deception` code) were rare. This difference, if reflective of a wider reality, suggests that security measures for devices at rest may be more impactful than security measures for addressing impromptu sharing scenarios. Several forces may be conspiring to make sharing scenarios less favorable for intrusions, including social etiquette, the probability of getting caught, and the hassle to successfully deceive the passive subject. It is worth revisiting the relationship between use of deception, and the motivation, processes, and aftermath of the intrusion -- it may be the case that deception is associated with the least high-stakes cases, where getting caught is of no concern and does not breach social norms; or it may be the case that it is associated with the most high-stakes cases, where the hassle and risk of getting caught are worth the trouble, from the active subject's perspective.
 
-* Raters found several instantiations of devices being left temporarily unattended. Most commonly, they found stories to indicate devices being unattended while their owners went to the bathroom (code `unattended-bathroom`). Raters also found stories where devices were left unattended in locations often deemed "trusted", such as the home or office, while passive subject went somewhere else, for instance to run errands, or to a meeting (codes `unattended-outside`, and `unattended-meeting`); and stories where passive subjects were asleep (`unattended-asleep`). These stories of intrusions thus substantiate the questioning of common assumptions of trustworthiness associated with locations.
+* Raters found several scenarios where devices are left temporarily unattended, expressed as subcodes. Most commonly, they found stories to indicate devices being unattended while their owners went to the bathroom (subcode `unattended-bathroom`). Raters also found stories where devices were left unattended in locations often deemed "trusted", such as the home or office, while the passive subject went somewhere else, for instance to run errands, or to a meeting (subcodes `unattended-outside`, and `unattended-meeting`); and stories where passive subjects were asleep (`unattended-asleep`). These stories of intrusions thus substantiate the questioning of common assumptions of trustworthiness associated with locations.
 
 * The commonality of the "bathroom scenario" seem to suggest that intrusions can occur in very little time. This aspect might be of importance for system design. For instance, intrusion detection algorithms which require a substantial period of behavior acquisition prior to classification may be ineffective in practice.
 
 * It can also be speculated that the "bathroom scenario" provides a set of relatively safe, or otherwise favorable, conditions for active subjects. Such conditions may include a *predictable* length of time alone with the device, *forewarning* that the passive subject may return (e.g. aural notice of flushing, shower shutting off, or doors opening), *social etiquette* in favor of leaving the device unattended (e.g. so as not to signal distrust), and passive subject's *trust* they are in a safe environment.
 
-* Situations where the opportunity for access came through access to a secondary device (code `opportunity-secondarydevice`) were not common, but still existed. These cases are also worth examining in comparison to unnatended access, as in both cases there is a low probability of getting caught.
+* Situations where the opportunity for access came through access to a secondary device (code `opportunity-secondarydevice`) were not common, but still existed. These cases are also worth examining in comparison to unattended access, as in both cases there is a low probability of getting caught.
 
 
 ## Category `motivation`
@@ -353,13 +300,13 @@ barplot_category(
 ```
 *Observations:*
 
-* "Control" was defined as the passive subject wanting "to learn about, or influence" relationships between the passive subject and third parties. By a clear majority, codings relating to control were the most selected by raters, suggesting that these is the most common motivation for intrusion among parties known to each other.
+* "Control" was defined as the passive subject wanting "to learn about, or influence" relationships between the passive subject and third parties. By a clear majority, codes related to control were the most selected by raters, suggesting that these is the most common motivation for intrusion among parties known to each other.
 
 * A desire to control possible intimate relationships of the passive subject (code `control-intimate`) is the most commonly selected subcode. Research on technology-mediated intimate partner abuse has previously identified control as an important, or even principal motivation (although often "control" is construed more broadly). Although definitions of abuse vary, our observation when reading the stories was that there were few examples that would undoubtedly qualify as intimate partner abuse. 
 
-* Nevertheless, this evidence does seem to lend support a more modest claim, that intrusions to smartphones can be a component of controlling behaviors between intimate partners. Furthermore, this data suggest that technology-enabled controlling behaviors may be better understood as existing on a continuum, and not necessarily under a dichotomy between abusive vs. healthy. This issue is worth revisiting, at least by listing examples.
+* Nevertheless, this evidence does seem to lend support a more modest claim, that intrusions to smartphones can be a component of controlling behaviors between intimate partners. Furthermore, this data suggestd that technology-enabled controlling behaviors between intimate partners may be better understood as existing on a continuum, and not necessarily under a dichotomy between abusive vs. healthy. 
 
-* Other, less common, motivations which raters coded were using some functionality of the device (code `convenience`), playing pranks (code `prank`), and exploitation (`exploit`).
+* Other motivations which raters coded were using some functionality of the device (code `convenience`), playing pranks (code `prank`), and exploitation (`exploit`).
 
 * Exploitation was rated with subcodes that refer to behaviors that are commonly seen as extremely pernicious, namely stealing of devices (code `exploit-steal`), stealing of business information (`exploit-business`), or stealing of sexualizable media content (`exploit-sexploit`).
 
@@ -385,17 +332,19 @@ barplot_category(
 ```
 *Observations:*
 
-* In the majority of stories, the matter of a lock did not came up, and the codebook intructed raters to not infer either absence or innefectiveness of a lock if not explicily indicated.
+* In most stories, raters judged that mentions to either presence or effectiveness of locks were not present. The codebook instructed raters to not make inferences, but to code only explicit evidence.
 
-* In two cases, locks were reported as effective. It should be notes that an effective lock does not impede any kind of unauthorized access: for instance, notification may be accessible. It is worth revisiting these stories to check wether that was case, or wether these stories should be excluded from analysis.
+* Raters judged there was evidence of locks being effective in small subset of stories. An effective lock, however, does not necessarily prevent all kinds of intrusions. For instance, pre-lock notifications may be accessible. These stories must thus be inspected to check whether they should be excluded from analysis.
 
-* When locks were explicitly mentioned, raters found some stories where locks were not set (code `notset`), but in a majority of cases there were locks, but still were overcome by active subjects (code `ineffective`). This lends support to questioning the effectiveness of locking among socially-close adversaries.
+* In few stories, raters found evidence that locks were not set (code `notset`). 
 
-* The subcodes further qualify these claims for different types of authentication methods. Subcodes `innefective-known`, `innefective-observed`, and `innefective-easy`, signify that secret-based authentication methods were innefective due to known constraints, respectively password-sharing practices, shoulder-surfing, and informed guessing. In contrast, only subcode `innefective-unlocked` may apply to biometric authentication. Is is worth revising if these codings are indeed associates with biometric methods. Furthermore, it is worth revisiting their association with `motivation-deception`.
+* More commonly, however, raters found evidence indicating locks were set, but active subjects were still able to obtain unauthorized access (code `ineffective`). This lends support to questioning the effectiveness of locking as an effective defense against socially-close adversaries.
+
+* The subcodes further qualify these observations for different types of authentication methods. Subcodes `ineffective-known`, `ineffective-observed`, and `ineffective-easy`, indicate that locks were ineffective due to known constraints of secret-based authentication methods, respectively password-sharing practices, shoulder-surfing, and informed guessing. In contrast, only subcode `ineffective-unlocked` may apply to biometric authentication (inspection of codings should clarify it that was the case). One possible implication of this observation, is that adoption of biometric unlock methods may greatly mitigate the possibility of intrusions by socially-close adversaries; and recommending its adoption a sensible advice for many users.
 
 ## Category `process` (list)
 
-> !TRANSFORMATION!: The code name "snooping" is more informal than the remaining code names in the process category, i.e. "tampering", "exfiltration", and "impersonation". Since it's only a label for the description raters actually used, there is no problem in changing after the fact. Provisionally, "snooping" was renamed to "information gathering".
+> !TRANSFORMATION!: "snooping" was renamed to "information gathering". The code name "snooping" is more informal than the remaining code names in the process category, i.e. "tampering", "exfiltration", and "impersonation". Since it's only a label for the description raters actually used, there is no problem in changing after the fact.
 
 ```{r echo=T}
 codings = 
@@ -425,21 +374,23 @@ barplot_category(
 
 *Observations:*
 
-* Given the large number of processes which were coded, it makes sense to find clusters of co-occurence. Because there is co-occurence, the frequency charts do not inform on the proportion of stories in which each code or code-subcode was found. These observations should be revised once these factors are taken into account.
+* Since several codes could, and were often selected for the same stories, these frequency charts have a different reading. They do not inform on the proportion of stories in which each code or code-subcode was found. It might make sense to produce such charts in subsequent analysis.
 
-* The vast majority of processes found in stories were processes of information gathering. Active subjects inspected a wide variety of information sources, including media files such as photos, social media activity, contacts, notifications, apps installed, call logs, or internet history. But, in the vast majority of cases, active subjects inspected text-based records of conversations, such as text messages, instant messages, or emails.
+* Given the large number of processes which were coded, it could also be useful to  find clusters of co-occurrence. 
 
-* Solely by frequency, it can be speculated that there is a connection between active subjects being motivated by controlling relationships of the passive subject, and conducting intrusions for information gathering. This claim can be further examined by looking at relationships between these codes. If true, it starts to paint a picture of the most common type of intrusions found in the stories: intimate partners, finding opportunities optimal for avoiding detection, and undeterred by secret-based logs, exert their desire for control by snooping on their partner's communication with third parties.
+*	Raters most often found evidence in the stories of information gathering. Raters found evidence of active subjects inspecting a wide variety of information sources, including media files such as photos, social media activity, contacts, notifications, apps installed, call logs, or internet history. Most commonly, by far wide margin, raters found evidence of active subjects inspecting text-based records of conversations, such as text messages, instant messages, or emails.
 
-* Some stories referenced intrusions that included tampering with the device, exfiltrating data, and impersonating the passive subject. 
+*	Solely by frequency, it can be speculated that there is a connection between active subjects being motivated by controlling relationships of the passive subject, and conducting intrusions for information gathering. This claim can be further examined by looking at relationships between these codes. If true, it starts to paint a picture of the most common type of intrusions found in the stories: intimate partners, finding opportunities optimal for avoiding detection, and undeterred by secret-based locks, exerting their desire for control by snooping on their partner’s communications with third parties.
 
-* Some subcodes of `tampering` are suggestive of having a associations with different sets of `motivation` codes, and leading to different types of aftermath (categories `aftermath` and `status`). Changing settings (`tampering-settings`) or contacts (`tampering-contacts`), taking photos (`tampering-media`), and even deleting content (`tampering-deletion`) might be associated with several types of intrusions that might not be considered "high-stakes", such as playing pranks or attempting to expediently accomplish some task which the passive subject might not object to. However, implanting surveillance software (`tampering-implant`) appears particularly pernicious, and is a marker explicitly mentioned in prior research on technology-mediated intimate partner abuse. 
 
-* Subcodes of exfiltration to another medium (of contacts, conversations, and visual media), and the single subcode of impersonation (in conversations with third parties) are also ambiguous on their own, warranting additional examination of co-occurence with motivations and aftermath, and examination of co-ocurrence with other processes.
+* Raters judged stories to provide evidence of other processes of intrusions, namely tampering with the device (code `tampering`), extracting data to outside media (code `exfiltration`), and impersonating the passive subject in interactions with others (code `impersonation`). 
 
+* It can be speculated that subcodes of `tampering` are associated with with different sets of `motivation` codes. Changing settings (`tampering-settings`) or contacts (`tampering-contacts`), taking photos (`tampering-media`), and even deleting content (`tampering-deletion`) might be associated with several types of intrusions that might not be considered "high-stakes", such as playing pranks or attempting to expediently accomplish some task which the passive subject might not object to. However, implanting surveillance software (`tampering-implant`) appears particularly pernicious, and is a behavioral marker explicitly mentioned in prior research on technology-mediated intimate partner abuse. 
+
+* Subcodes of exfiltration to another medium (of contacts, conversations, and visual media), and the single subcode of impersonation (in conversations with third parties) are also ambiguous on their own, warranting additional examination of co- occurrence with motivations and aftermath, and examination of co- occurrence with other processes.
 
 ## Category `knowledge`
-The following types of ways in which the active subject leaned about the intrusions were coded:
+The following types of ways in which active subjects learned about intrusions were coded:
 ```{r}
 codings %>%
   filter(category == "knowledge") %>%
@@ -458,13 +409,11 @@ barplot_category(
 ```
 *Observations:*
 
-* Raters judged that in most stories, passive subjects learned about intrusions. With subcodes, raters indicated three ways to knowledge: findings active subjects in the act (subcode `yes-redhanded`), self-admission by active subjects (subcode `yes-admission`), and finding clues leading to a suspicious on unauthorized access (subcode `yes-clues`). Several types of clues are suggested in the subcode description, and some particular examples would illustrate similarities and differences of possible interest.
+* Raters judged that in most stories passive subjects eventually learned about intrusions. With subcodes, raters indicated three paths to knowledge: findings active subjects in the act (subcode `yes-redhanded`), self-admission by active subjects (subcode `yes-admission`), and finding clues leading to a suspicious on unauthorized access (subcode `yes-clues`). Several types of clues are suggested in the subcode description, and some particular examples would illustrate similarities and differences of possible interest.
 
-* This distribution between learning of intrusions, or not, might be an artifact of the data-gathering: it is reasonable to assumed that active subjects are likely to under-report, and thus most stories were told by passive subjects, which can only tell them if they eventually learned of the intrusion. However, as our Facebook list experiment indicated, there is a comparable bias on both the active and the passive subject sides. Thus, it might be true that eventually, a larger portion of intrusions that people remember are the ones where eventually the passive subject learned of the intrusions.
+* The distribution of this code between `yes` and `no` may be an artifact of the data-gathering. It is reasonable to assume that active subjects are likely to under-report, and thus most stories could have been provided by passive subjects, which can only tell them if they eventually learned about intrusions. However, as our Facebook list experiment indicated, there is a comparable bias on both the active and the passive subject sides. Thus, it might be true that eventually, a larger portion of intrusions that people remember are the ones where eventually the passive subject learned of the intrusions.
 
 ## Category `aftermath` (list)
-
-> !TRANSFORMATION!: In this category, only codes, and not subcodes, were attributed. There is a natural structure between passive and negative types of aftermath, as evidenced in the code descriptions. The data could be trannsformed to superimpose this distinction as a code, but for now the bar chart seems illustrative enough.
 
 The following types of explicitly-referenced sentiments towards the intrusion were coded:
 ```{r}
@@ -488,16 +437,16 @@ get_barplot_category(
 
 * Sentiments were rated mostly as a control variable for perceptions of severity -- at the outset, we planned a second study were stories would be rated as to their severity, and it is reasonable to expect that readers would let their sentiments be influenced by the characters own sentiments.
 
-> BTW, something that will probably also perceptions of seveirty is whether the passive subject found the active subject to be engaged in marital or dating infidelity -- and this information is not coded.
+* In this category, only codes, and not subcodes, were attributed. There is a natural structure between passive and negative types of aftermath, as evidenced in the code descriptions. The data could be transformed to superimpose this distinction as a code, but for now the bar charts seems illustrative enough.
 
-* Nevertheless, we can observe that, in the majority of cases, intrusions lead to negative sentiments, such as annoyment, anger, guilt, humiliation, pain, etc., on both the active and the passive subjects. In some cases, positive sentiments arose, such as amusement, satisfaction, or relied. 
+* Nevertheless, we can observe that, in most cases, raters judged intrusions to lead to negative sentiments, such as annoyment, anger, guilt, humiliation, pain, etc., on both the active and the passive subjects. In some cases, positive sentiments arose, such as amusement, satisfaction, or relief. 
 
-* Examining relationships of aftermath with prior categories should inform the origins and context of this distribution.
+* Examining relationships of aftermath codes with prior categories should inform the origins and context of this distribution.
 
-* Like in the case of process codes, these charts are not relative to the proportion of stories, and subsequent analysis, for instance in the clustering step, should address that limitation, and re-open examination of these observations.
+* Like in the case of process codes, these charts are not relative to the proportion of stories, and subsequent analysis, for instance clustering, should address that limitation, and re-open examination of these observations.
 
 ## Category `status`
-The following types of resulting relationship status which were coded:
+The following types of resulting relationship status were coded:
 ```{r}
 codings %>%
   filter(category == "status") %>%
@@ -517,20 +466,22 @@ get_barplot_category(
 ```
 *Observations:*
 
-* Resulting relationship status was coded, like aftermath,  mostly as a control variable for perceptions of severity.
+*	Resulting relationship status was coded, like aftermath, mostly as a control variable for perceptions of severity.
 
-* Most commonly, stories were not coded as evideding maintanence or change in relationship status, per the coding criteria. When status was rated, both maintenance and ending of relationships was found. 
+*	Most commonly, stories were not coded as evidencing maintenance or change in relationship status, per the coding criteria. When status was rated, both maintenance and ending of relationships was found.
 
-* Like aftermath, this category can be seen as an outcome variable, and should be interesting to analyze construing the preceding variables as predictors.
+*	Like aftermath, this category can be seen as an outcome variable, and could analyzed as being predicted by preceding code categories.
 
+# TODOs
 
+- Move mid-notebook transformations in `process`subcodes somewhere else, e.g. RQDA tables or retrieval script.
 
-> TODO: move transformations in process and aftermath to the beggining, or ammend tables in RQDA.
+- Remove "-NA"" in axis of bar charts for aggregated codes.
 
-> TODO: remove or substitute explitic NA in subcode table.
+- Explore adding the code description as either axes or labels; 
 
-> TODO: allow single tables for
+- Re-inspect codings in RQDA.
 
-> TODO: explore adding the code description as either axes or labels. At least, order the list of description by the same order as bar chart.
+- RQDA: Correct typos in category and code descriptions
 
-> TODO: review and proof
+- Consider coding whether the passive subject was engaged in marital or dating infidelity.  This dimension could affect perceptions of severity. This could be done after regression analysis of severity ratings, if there indication that adding this variable could reduce variance.

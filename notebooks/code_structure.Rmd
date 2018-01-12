@@ -3,9 +3,38 @@ title: "R Notebook"
 output: html_notebook
 ---
 
-> Notebook not ready. What follows is some experiments I made initially.
+> Notebook not ready. What follows are sections moved from the distribution notebook and some experiments I made initially.
 
 > TODO: macrostructures, for associations between codes within list categories (e.g. cluster of snooping), associations between code in different categories.
+
+### Spreading the data
+
+Using this distinction of factor and list codes, we can now prepare a tidy dataset, `codings_wide`, in which each row represents an observation (a story), and each column represents a category. Depending on the type of category, a cell will either contain a level of a factor, or a list of codes/subcodes (which may be empty), represented as a vector.
+
+```{r}
+codings_wide = 
+  codings %>% 
+  select(fid, category, codename) %>%
+  group_by(fid, category) %>%
+  # convert all codes per fid/category into lists
+  summarise(codename_list = list(codename)) %>%
+  # make a column per category
+  spread(category, codename_list) %>%
+  # clean-up factor categories
+  mutate_at(vars(-aftermath, -process), unlist) %>%
+  # substitute NULLs in list categories for empty lists
+  # with functional magic
+  mutate(aftermath = map(aftermath, ~ . %||% character(0))) %>%
+  mutate(process = map(process, ~ . %||% character(0))) %>%
+  as_data_frame()
+```
+
+The first few rows of the widen dataset look like this:
+
+```{r}
+knitr::kable(head(codings_wide))
+```
+
 
 
 
