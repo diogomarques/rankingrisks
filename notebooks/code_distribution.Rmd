@@ -1,16 +1,23 @@
 ---
 title: "Overview of the distribution of codes"
 output:
-  word_document:
-    toc: yes
   html_notebook:
+    fig_caption: yes
+    fig_width: 8
+    fig_height: 5
     number_sections: yes
+    theme: paper
+    toc: yes
+  pdf_document:
+    toc: yes
+  word_document:
     toc: yes
 ---
 ```{r, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
-require(gridExtra)
 require(tidyverse)
+require(gridExtra) # for side-by-side plots
+require(glue) # for pretty labels
 load("../data/codings.rda")
 ```
 
@@ -174,28 +181,39 @@ We'll next look at the distribution of codes and subcodes per category. Where ap
 
 ```{r}
 # barplots will be created with the same functions (below) for consistency.
-barplot_category = function(data_subset) {
-    grid.arrange(
-      get_barplot_category(data_subset),
-      get_barplot_category(data_subset, consolidate = T),
-      ncol = 2
+get_barplot_grid = function(data_subset) {
+    cowplot::plot_grid(
+      get_barplot_codenames(data_subset),# + cowplot::theme_cowplot(),
+      get_barplot_aggregated(data_subset), #+ cowplot::theme_cowplot(),
+      ncol = 2,
+      rel_widths = c(2/3, 1/3)
     )
 }
 
-get_barplot_category = function(data_subset, consolidate = FALSE) { 
-  if(consolidate) {
-    data = 
-      data_subset %>%
-      mutate(variable = code)
-  } else {
-    data = 
-      data_subset %>%
-      mutate(variable = paste(code, subcode, sep = "-"))
-  }
-  
-  plot = 
-    data %>%
+get_barplot_aggregated = function(data_subset) {
+  data_subset %>% 
     ggplot() + 
+    geom_bar(
+      aes(
+        x = fct_infreq(code),
+        fill = code
+      ),
+      show.legend = F
+    ) +
+    coord_flip() +
+    xlab(NULL) + 
+    ylab("Consolidated frequency")
+}
+
+get_barplot_codenames = function(data_subset, width = 50) { 
+  data_subset %>% 
+  mutate(
+    variable = glue(
+      "[{codename}] \n {wraped_desc}",
+      wraped_desc = str_wrap(description, width = width)
+      )
+    ) %>%
+  ggplot() + 
     geom_bar(
       aes(
         x = fct_infreq(variable),
@@ -204,19 +222,8 @@ get_barplot_category = function(data_subset, consolidate = FALSE) {
       show.legend = F
     ) +
     coord_flip() +
-    xlab(NULL)
-  
-  plot =
-    plot +
-    ylab(
-      ifelse(
-        consolidate, 
-        "Frequency (consolidated to codes)",
-        "Frequency (as rated)"
-      )
-     )
-  
-  plot
+    xlab(NULL) + 
+    ylab("Rater decision frequency")
 }
 ```
 
@@ -233,10 +240,11 @@ codings %>%
 
 
 Distributed has follows:
-```{r}
-barplot_category(
-  codings %>% filter(category == "relationshiptype")
-  )
+```{r, fig.width=8}
+codings %>% 
+  filter(category == "relationshiptype") %>%
+  get_barplot_grid()
+
 ```
 *Observations:*
 
@@ -485,3 +493,16 @@ get_barplot_category(
 - RQDA: Correct typos in category and code descriptions
 
 - Consider coding whether the passive subject was engaged in marital or dating infidelity.  This dimension could affect perceptions of severity. This could be done after regression analysis of severity ratings, if there indication that adding this variable could reduce variance.
+
+```{r}
+
+get_barplot_codenames(codings %>% filter(category == "status"))
+get_barplot_aggregated(codings %>% filter(category == "status"))
+codings %>% filter(category == "process") %>% get_barplot_grid
+  
+
+
+
+
+```
+

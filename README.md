@@ -4,15 +4,15 @@ This is a data analysis project that is not yet public. All data sources are, fo
 
 If you are not one of my collaborators, and have not been added by e.g. your Github key, there's no much use in cloning this repo. 
 
-Packages dependencies:
+Dependencies:
 
 * tidyverse
-* glue
+* glue: for string literals
 * RQDA: to handle qualitative data codings
 * irr: to measure inter-rater agreement
 * hadley/secure: to encrypt raw data
 * googlesheets: to retrieve data on Google Sheets
-* gridExtra: for visualizing plots side-by-side in notebooks
+* cowplot: for visualizing plots side-by-side in notebooks
 
 Tags:
 
