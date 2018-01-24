@@ -1,8 +1,6 @@
 ---
 title: "Overview of the distribution of codes"
 output:
-  pdf_document:
-    toc: yes
   html_notebook:
     fig_caption: yes
     fig_width: 8
@@ -10,6 +8,9 @@ output:
     number_sections: yes
     theme: paper
     toc: yes
+  pdf_document:
+    toc: yes
+    number_sections: yes
   word_document:
     toc: yes
 ---
@@ -47,11 +48,15 @@ This analysis will take top-down view, looking first at code categories, and the
 ## Descriptions
 
 The category descriptions are as follows:
+
 ```{r}
 codings %>%
-  select(Category = category, Description = category.desc) %>%
-  distinct() %>% 
-  knitr::kable(booktabs = T)# %>% kableExtra::
+  transmute(
+    Category = category, 
+    Description = str_sub(category.desc, end = 85)) %>%
+  distinct() %>%
+  knitr::kable()
+  
 ```
 
 ## Factor and list categories
@@ -64,7 +69,7 @@ For instance, the category `lock` can be converted into factor, with the followi
 ```{r}
 codings %>% 
   filter(category == "lock") %>%
-  transmute(levels = codename, description) %>%
+  transmute(levels = codename, description = str_sub(description, end = 80)) %>%
   distinct() %>%
   arrange(levels) %>%
   knitr::kable()
@@ -328,16 +333,6 @@ codings %>%
 
 ## Category `process` (list)
 
-> TRANSFORMATION: "snooping" was renamed to "information gathering". The code name "snooping" is more informal than the remaining code names in the process category, i.e. "tampering", "exfiltration", and "impersonation". Since it's only a label for the description raters actually used, there is no problem in changing after the fact.
-
-```{r echo=T}
-codings = 
-  codings %>% 
-  mutate_at(vars(codename, code), gsub,  pattern = "snooping",
-    replacement = "informationgathering")
-```
-
-
 The following types of processes were coded:
 
 ```{r, fig.width=8, fig.height=10}
@@ -419,12 +414,11 @@ codings %>%
 
 ```{r echo=T}
 # TODO:
-# - Move mid-notebook transformations in `process`subcodes somewhere else, e.g. RQDA tables or retrieval script.
+#- Review after "unspecified" subcodes were transformed to "other"
 #- RQDA: Re-inspect codings in RQDA.
 #- RQDA: Correct typos in category and code descriptions
 #- Consider coding whether the passive subject was engaged in marital or dating infidelity.  This dimension could affect perceptions of severity. This could be done after regression analysis of severity ratings, if there indication that adding this variable could reduce variance.
+#- Find notebook and PDF table format that does not require pre-trimming (kableExtra does NOT work)
 ```
 
-
-# TODOs
 
