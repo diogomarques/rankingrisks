@@ -2,51 +2,63 @@
 title: "Story lenght statistics, pre- and post-editing"
 output: html_notebook
 ---
-```{r "setup", include=FALSE}
+```{r echo = FALSE, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = "..")
-source("../R/retrieve_data.R")
+library(tidyverse)
+library(here)
 ```
 
-(This notebook is not reproducible without access to raw data.)
+> This notebook is not reproducible without access to raw data.
 
-For stories 1 to 35, there are both raw and edited versions.
+For stories 1 to 35, there are both raw and edited versions. We can compare word counts, and see if there are significant differences. Since many stories were edited for brevity, some difference is expected.
 
-Start by retrieving the data. The keys to the appropriate Google Sheets are encrypted in the vault. Out-of-band authentication may be needed to
-access Google Sheets.
+Start by retrieving the data:
 
-```{r, results='hide'}
-stories.raw = retrieve_sheet_data("s1_raw_stories")
-stories.edited = retrieve_sheet_data("s1_edited_stories")
+```{r echo = T, results = "hide"}
+stories = 
+  read_csv(here("data-raw/stories.csv"))
 ```
 
-Now merge:
+Now, add word counts to stories which have both raw and edited versions. 
+
 ```{r}
-stories.raw = stories.raw %>% 
-  select(id, raw = story)
-stories.edited = stories.edited %>%
-  select(id, edited = story)
-stories = stories.raw %>% 
-  left_join(stories.edited)
+word_count =
+  stories %>%
+  filter(! is.na(edited_story)) %>%
+  mutate(raw_wc = str_count(raw_story),
+         edited_wc = str_count(edited_story)) %>%
+  select(fid, raw_wc, edited_wc)
+glimpse(word_count)
 ```
-Now we can add word counts to each row, and then calculate mean word counts (and respective SD's) for either raw or edited stories.
-```{r}
-stories.wc = 
-  stories %>% 
-  mutate(raw.wc = str_count(raw), edited.wc = str_count(edited)) 
 
-stories.wc %>%
+Calculate means, SDs:
+
+```{r}
+word_count %>%
   summarise(
-    mean(raw.wc), 
-    sd(raw.wc), 
-    mean(edited.wc), 
-    sd(edited.wc))
+    mean_wc_edited = mean(edited_wc),
+    sd_wc_edited = sd(edited_wc),
+    mean_wc_raw = mean(raw_wc),
+    sd_wc_raw = sd(raw_wc)
+    )
 ```
+
+Edited stories, on average, indeed have less words.
+
+With boxplot:
+
+```{r}
+word_count %>%
+  gather(raw_wc, edited_wc, key = "type", value = "wc") %>%
+  ggplot(data = .) +
+  geom_boxplot(aes(type, wc))
+```
+
+Medians are very close; most of the reduction in word count comes for outliers.
 
 Are word counts significantly different?
 
 ```{r}
-t.test(stories.wc$raw.wc, 
-       stories.wc$edited.wc)
+t.test(word_count$raw_wc, word_count$edited_wc, paired = T)
 ```
 
