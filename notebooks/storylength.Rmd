@@ -8,7 +8,9 @@ knitr::opts_knit$set(root.dir = "..")
 source("../R/retrieve_data.R")
 ```
 
-Raw and edited versions of stories are stored in separate Google Sheets.
+(This notebook is not reproducible without access to raw data.)
+
+For stories 1 to 35, there are both raw and edited versions.
 
 Start by retrieving the data. The keys to the appropriate Google Sheets are encrypted in the vault. Out-of-band authentication may be needed to
 access Google Sheets.

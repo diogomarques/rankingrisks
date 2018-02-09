@@ -1,5 +1,8 @@
 ## Outs codings to CSV to compare them manually, preserving 
-## rater comments
+## rater comments.
+##
+## This was used for first-round consensus and never had to be
+## ran again.
 
 # 2nd rater codes (using responses clean to preserve comments)
 r2.codings.wide = 
@@ -10,7 +13,6 @@ r3.codings.wide =
   responses %>% filter(rater == "tiago") %>% select(-timestamp)
 
 # 1st rater codes, in same format
-# TODO: removing rater then adding rater
 r1.codings.wide = 
   codings %>% 
   filter(rater == "diogo") %>%

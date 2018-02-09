@@ -1,6 +1,7 @@
 ##
 # Clean-up and prepare data for inspecting agreement between raters.
 ##
+## TODO: Was used in first-round agreement; must be cleaned-up.
 
 # Retrive 1st rater data & codebook from RQDA
 openProject(RQDA_PROJECT_PATH)

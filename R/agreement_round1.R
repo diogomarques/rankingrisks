@@ -1,6 +1,7 @@
 ##
 # Calculate agreement scores for initial codings.
 ##
+## TODO: Was used in first-round agreement; must be cleaned-up.
 
 # split data for iota, which needs list of dfs per variable
 # for other cases, codings.complete.wide is already well formed
