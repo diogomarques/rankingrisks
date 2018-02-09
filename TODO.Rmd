@@ -1,0 +1,10 @@
+---
+title: "TODO list"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+- Make agreement calculations reproducible. Old versions of the RQDA, before consensus, exist in the commit history.
