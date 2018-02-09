@@ -1,3 +1,5 @@
+# Not reproducible without access to raw data.
+#
 # Obtain all codings per case from the RQDA database, annotated
 # with code categories, codes, subcodes, start and end indexes
 # for quotes, and total.
@@ -54,8 +56,7 @@ code =
 codebook = 
   bind_rows(category, code) %>%
   arrange(name)
-View(codebook)
 
 # save all to data-raw
-write_csv(codings, here("data-raw/", "rqda_codings.csv"))
-write_csv(codebook, here("data-raw/", "rqda_codebook.csv"))
+write_csv(codings, here("data-raw/", "retrieved_rqda_codings.csv"))
+write_csv(codebook, here("data-raw/", "retrieved_rqda_codebook.csv"))

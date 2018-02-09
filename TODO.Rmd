@@ -8,3 +8,4 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 - Make agreement calculations reproducible. Old versions of the RQDA, before consensus, exist in the commit history.
+- Correct typos and add new subcodes to RQDA database, then retrieve and tidy again.

@@ -7,7 +7,7 @@ If you are not one of my collaborators, and have not been added by e.g. your Git
 Dependencies:
 
 * tidyverse
-* glue: for string literals
+* glue, here, rgeolocate: utils
 * RQDA: to handle qualitative data codings
 * irr: to measure inter-rater agreement
 * hadley/secure: to encrypt raw data

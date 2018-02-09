@@ -1,6 +1,6 @@
-## Functions to retrieve data from raw sources.
+## Helpers to retrieve data from Google Sheet sources, identified by
+## keys are stored in the vault.
 
-# All global variables
 SHEETS_VAULT = "sheets"
 
 #' Get a list of Google Sheet keys stored in the vault.
@@ -84,35 +84,4 @@ retrieve_sheet_data = function(sheet_name,
   key %>% 
     gs_key() %>% # register
     gs_read() # read
-}
-
-#' Retrieve the wave identifier for each observational unit from
-#' a Google Sheet, whose key is stored in the encrypted vault.
-#'
-#' @param sheet_name the name of the sheet names(get_sheet_keys) 
-#' which contains the "wave" variable 
-#' @param vault A hadley/secure vault containing keys to Google
-#' Sheet with relevant data.
-#' @param save_to_data Should the data be serialized to \data?
-#'
-#' @return a tibble of wave identifiers for observational unit
-#' @export
-#'
-#' @examples
-retrieve_waves = function(vault = SHEETS_VAULT,
-                          sheet_name = "s1_participants",
-                          save_to_data = FALSE) {
-  data =
-    retrieve_sheet_data(sheet_name = sheet_name,
-                        vault = vault)
-  waves = 
-    data %>%
-    transmute(fid = row_number(), 
-              wave = wave)
-  
-  # save
-  if(save_to_data == TRUE)
-    save(waves, file = file.path("data", "waves.rda"))
-  
-  waves
 }
