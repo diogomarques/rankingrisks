@@ -1,22 +1,24 @@
 ---
-title: "Sample summaries for 1st study participants"
+title: "Sample summaries for study participants"
 output: html_notebook
 ---
 ```{r "setup", include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = "..")
-source("../R/retrieve_data.R")
+library(tidyverse)
+library(here)
 ```
-## Data retrieval
-Participant data, exported from LimeSurvey, is stored in Google Sheet. 
 
-Start by retrieving the data. The key to the appropriate Google Sheet is encrypted in the vault. Out-of-band authentication may be needed to
-access Google Sheets.
+> This notebook is not reproducible without access to raw data.
+
+## Data retrieval
+Participant data, exported from LimeSurvey, was stored in Google Sheet, and retrived to a local file in `data-raw`. Start by retrieving the data. 
 
 ```{r, results='hide'}
-data = retrieve_sheet_data("s1_participants")
+data = read_csv(here("data-raw/retrieved_participants.csv"))
 ```
+
 Here are the available variables per participant:
+
 ```{r}
 names(data)
 
@@ -26,46 +28,51 @@ names(data)
 ### Gender
 
 ```{r}
-data %>% group_by(GENDER) %>% summarise(n()) 
+data %>% group_by(GENDER) %>% summarise(f = n()) 
 ```
+
 ### Age group
 ```{r}
-data %>% group_by(AGE) %>% summarise(n()) 
+data %>% group_by(AGE) %>% summarise(f = n()) 
 ```
+
 ### Country
+
+Country was inferred from IP address, using the Maxmind database.
+
 ```{r}
-data %>% group_by(country) %>% summarise(n()) 
+data %>% group_by(country) %>% summarise(f = n()) %>% arrange(desc(f))
 ```
-### Wave of data collection
+### Waves of data collection
 ```{r}
-data %>% group_by(wave) %>% summarise(n())
+data %>% group_by(wave) %>% 
+  summarise(f = n(), 
+            day = min(submitdate))
 ```
-### Data gathering period
-First and last answer submission data/time.
-```{r}
-data %>% summarise(first = min(submitdate), last = max(submitdate)) 
-```
+
 ### Task completion time
 Mean time to complete the survey-answering task, in minutes, and respective SD.
 ```{r}
 data %>% 
-  mutate(tasktime.m = interviewtime / 60) %>%
-  summarise(mean(tasktime.m), sd(tasktime.m))
+  mutate(minutes = interviewtime / 60) %>%
+  summarise(mean = mean(minutes), 
+            sd = sd(minutes))
 ```
 ### Compensation
 Mean hourly compensation, in GBP, and respective SD.
 ```{r}
 data %>%
   mutate(pph = 60 * 60 * compensation / interviewtime) %>%
-  summarise(mean(pph), sd(pph))
+  summarise(mean = mean(pph), 
+            sd = sd(pph))
 ```
 ### Missed ACQs
-Instances where at least one attention check question was missed.
+Instances where at least one attention check question was missed, but data was not excluded. Relayed stories were manually checked, and judged credible and informative. 
+
 ```{r}
 data %>% 
   filter(QUAL1 != "Yes" | QUAL2 != "Yes") %>%
-  mutate(tasktime.m = interviewtime / 60) %>%
-  select(id, wave, tasktime.m)
+  select(id, wave, QUAL1, QUAL2)
 ```
-Interview times look normal. Relayed stories were manually checked, and although not the best, judged credible and informative. 
+
 
