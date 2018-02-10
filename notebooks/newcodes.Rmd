@@ -10,120 +10,77 @@ require(tidyverse)
 Load *codings* dataset and add collumn indicating wave of data gathering.
 
 ```{r}
+# TODO: waves hould already be in codings.rda
+
 load("../data/codings.rda")
 load("../data/waves.rda")
 
 codings = codings %>% full_join(waves, by = "fid")
-str(codings, vec.len = 1, nchar.max = 80)  
 ```
 
-## New codes / subcodes per wave
-### Codes
+## New codes / subcodes
+### Per wave
+
+New `codename` (codes or code-subcodes) per wave:
+
 ```{r}
-codings %>% 
-  select(fid, wave, category, code) %>% 
-  group_by(category, code) %>% 
-  summarise_all(min) %>% 
-  arrange(fid) %>% 
-  ungroup() 
+codings %>%
+  group_by(codename) %>%
+  summarise(wave = first(wave)) %>%
+  group_by(wave) %>%
+  summarise(n = n(), codenames = list(codename)) %>%
+  rowwise() %>%
+  mutate(codenames = toString(unlist(codenames))) %>%
+  knitr::kable()
+
+
 ```
 ### Subcodes
+
+New `category-code` (aggregated) per wave:
+
 ```{r}
-codings %>% 
-  select(fid, wave, codename) %>% 
-  group_by(codename) %>% 
-  summarise_all(min) %>% 
-  arrange(fid) %>% 
-  ungroup() 
+codings %>%
+  group_by(category, code) %>%
+  summarise(wave = first(wave)) %>%
+  group_by(wave) %>%
+  summarise(n = n()) %>%
+  knitr::kable()
 ```
-### Plots
-(Plotting code is messy, and not shown here. See Rmd for details.)
 
-```{r, include=F}
-# helpers to calculate, for each file, codes/subcodes used so far
-cum.subcodes = function(curfid, data) {
-  data %>%
-    filter(fid <= curfid) %>%
-    summarise(n_distinct(codename)) %>%
-    first()
-}
-cum.codes = function(curfid, data) {
-  data %>%
-    filter(fid <= curfid) %>%
-    mutate(category.code = str_c(category, "-", code)) %>%
-    summarise(n_distinct(category.code)) %>%
-    first()
-}
-
-# get tables of cummulative codes/subcodes
-subcodes = 
-  codings %>% 
-  distinct(fid) %>% 
-  rowwise(.) %>% 
-  mutate(numsubcodes = cum.subcodes(fid, codings)) %>% 
-  arrange(fid) %>%
-  left_join(waves, by = "fid")
-
-codes = 
-  codings %>% 
-  distinct(fid) %>% 
-  rowwise(.) %>% 
-  mutate(numcodes = cum.codes(fid, codings)) %>% 
-  arrange(fid) %>%
-  left_join(waves, by = "fid")
-
-# plot codebook growth
-plotcodes = function(data,
-                     ylab = "",
-                     main = "",
-                     labeloffset = 0.5) {
-  data %>% select(-wave) %>% plot(
-    .,
-    xlab = "Story",
-    ylab = ylab,
-    main = main,
-    pch = 1
-  )
-  text(
-    data[[1]],
-    data[[2]] + labeloffset,
-    labels = data[[2]],
-    cex = 0.6,
-    offset = 10
-  )
-  
-  # obtain groups
-  groups =
-    data %>%
-    group_by(wave) %>%
-    summarise(lastfid = last(fid))
-  
-  # add lines for each group
-  for (i in 1:length(groups$lastfid)-1) {
-    abline(v = groups$lastfid[i] + 0.5)
-  }
-  groups$lastfid
-  
-  # add block labels
-  for (i in 1:length(groups$lastfid)) {
-    a = max(groups$lastfid[i-1], 0) + 0.5
-    b = groups$lastfid[i] + 0.5
-    
-    text(x = mean(c(a, b)),
-       y = 15,
-       labels = groups$wave[i]
-       )
-    
-  }
- 
-}
-
-```
+### Step plot
 ```{r}
-plotcodes(subcodes, ylab= "# codes / subcodes used", "Cummulative codes / subcodes", labeloffset = 1)
-```
-```{r}
-plotcodes(codes, ylab= "# codes used", "Cummulative codes")
-```
+# TODO: labels, wave aesthetics
+
+cum_codenames =
+  codings %>%
+  group_by(codename) %>%
+  summarise(first_fid = first(fid)) %>%
+  group_by(first_fid) %>%
+  summarise(new_codenames = n(), which = list(codename)) %>%
+  arrange(first_fid) %>%
+  mutate(cum_new_codenames = cumsum(new_codenames)) %>%
+  add_row(first_fid = max(codings$fid), cum_new_codenames = max(.$cum_new_codenames))
+cum_codes =
+  codings %>%
+  group_by(category, code) %>%
+  summarise(first_fid = first(fid)) %>%
+  group_by(first_fid) %>%
+  summarise(new_codes = n()) %>%
+  arrange(first_fid) %>%
+  mutate(cum_new_codes = cumsum(new_codes)) %>%
+  add_row(first_fid = max(codings$fid), cum_new_codes = max(.$cum_new_codes))
+cumulative =
+  cum_codenames %>% 
+  left_join(cum_codes)
+
+cumulative %>%
+  ggplot() +
+  geom_step(
+    aes(first_fid, cum_new_codenames)) +
+  geom_step(linetype = 2,
+    aes(first_fid, cum_new_codes), data = . %>% filter(! is.na(cum_new_codes)))
 
 
+
+```
