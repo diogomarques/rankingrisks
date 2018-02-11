@@ -4,18 +4,15 @@ output: html_notebook
 ---
 ```{r "setup", include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-require(tidyverse)
+library(tidyverse)
+library(here)
 ```
 ## Preparation
-Load *codings* dataset and add collumn indicating wave of data gathering.
+Load *codings* dataset:
 
 ```{r}
-# TODO: waves hould already be in codings.rda
-
 load("../data/codings.rda")
-load("../data/waves.rda")
-
-codings = codings %>% full_join(waves, by = "fid")
+glimpse(codings)
 ```
 
 ## New codes / subcodes
@@ -37,7 +34,7 @@ codings %>%
 ```
 ### Subcodes
 
-New `category-code` (aggregated) per wave:
+New aggregate codes (`category-code`) per wave:
 
 ```{r}
 codings %>%
@@ -51,7 +48,7 @@ codings %>%
 ### Step plot
 ```{r}
 # TODO: labels, wave aesthetics
-
+# Calculate cumulative codenames / category-codess
 cum_codenames =
   codings %>%
   group_by(codename) %>%
@@ -72,7 +69,7 @@ cum_codes =
   add_row(first_fid = max(codings$fid), cum_new_codes = max(.$cum_new_codes))
 cumulative =
   cum_codenames %>% 
-  left_join(cum_codes)
+  left_join(cum_codes, by = "first_fid")
 
 cumulative %>%
   ggplot() +
