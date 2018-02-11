@@ -1,0 +1,111 @@
+---
+title: "Model simulation"
+output: html_notebook
+---
+
+This notebook contains simulations of approaches to modelling, to inform the design of study 2.
+
+First, load the data.
+
+```{r include=FALSE}
+library(here)
+library(tidyverse)
+library(modelr)
+library(ordinal)
+load(here("data", "codings.rda"))
+set.seed(1980)
+```
+
+Suppose that there was just one measure of severity, and that and a single rater classified all stories as to their severity. The simplest model would take the form:
+
+> severity ~ story  + error
+
+The measure of severity could be a continous-approaching rating, ordinal, or binary. Random severity outcomes can be simulated:
+
+```{r echo = T, include = FALSE}
+n = codings %>%
+  distinct(fid) %>%
+  nrow()
+
+# continuous severity from 0 - 100
+severity_num = 
+  runif(n) * 100
+
+# binary
+severity_binary =
+  sample(0:1, n, replace = T) == 0
+
+# 5 levels of an ordered factors
+levels = c("not_severe", 
+           "slightly_severe",
+           "somewhat_severe",
+           "moderately_severe",
+           "extremely_severe")
+severity_factor =
+  sample(levels, n, replace = 2) %>%
+  factor(levels = levels, ordered = T)
+
+```
+
+Since these are randomly generated outcomes, completely unrelated to the predictor (story), the models should not be informative.
+
+```{r}
+# fid as categorical
+story = codings$fid %>% unique() %>% factor(ordered = F)
+
+# fit models
+linear = lm(severity_num ~ story)
+logistic =  glm(severity_binary ~ story,
+                family = "binomial")
+ordinal = clm(severity_factor ~ 1)
+
+# model predictions 
+tibble(story, severity_num, severity_binary) %>%
+  add_predictions(
+    model = linear, 
+    var = "severity_num_pred") %>%
+  add_predictions(
+    model = logistic,
+    var = "severity_binary_pred") %>%
+  select(order(names(.))) %>%
+  select(story, everything())
+```
+
+Alas, the linear model becomes a map from story -> rating, thus perfectly predicting the response. This happens because `story` is a categorical variable. Predictions from the logistic model takes only two values, positive or negative.
+
+```{r}
+codings %>% 
+  group_by(story = fid) %>% 
+  summarise(storylength = first(char_fid)) %>%
+  mutate(
+    severity_num,
+    severity_binary
+  ) %>%
+  add_predictions(
+    lm(severity_num ~ storylength, data = .)
+  )
+
+story = codings$fid %>% unique() %>% factor(ordered = F)
+
+# fit models
+linear = lm(severity_num ~ story)
+logistic =  glm(severity_binary ~ story,
+                family = "binomial")
+
+# model predictions 
+tibble(story, severity_num, severity_binary) %>%
+  add_predictions(
+    model = linear, 
+    var = "severity_num_pred") %>%
+  add_predictions(
+    model = logistic,
+    var = "severity_binary_pred") %>%
+  mutate(
+    severity_binary_pred = severity_binary_pred > 0
+  ) %>%
+  select(order(names(.))) %>%
+  select(story, everything())
+
+
+```
+
