@@ -1,5 +1,5 @@
 ---
-title: "Analysis of codebook growth"
+title: "Codebook growth"
 output: html_notebook
 ---
 ```{r "setup", include=FALSE}
@@ -8,10 +8,10 @@ library(tidyverse)
 library(here)
 ```
 ## Preparation
-Load *codings* dataset:
+Load `codings` dataset:
 
 ```{r}
-load("../data/codings.rda")
+load(here("data/codings.rda"))
 glimpse(codings)
 ```
 

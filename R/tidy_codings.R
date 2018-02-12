@@ -42,6 +42,7 @@ codings_gsheets =
 codings_both = 
   codings %>%
   bind_rows(codings_gsheets)
+codings = codings_both
 
 # save
-save(codings_both, file = here("data/", "codings.rda"))
+save(codings, file = here("data/", "codings.rda"))
