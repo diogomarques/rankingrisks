@@ -1,11 +1,8 @@
-# Creates a shareable dataset of codings, combining RQDA-retrieved and
-# sheets-retrived data, and outs to codings.RDA.
+# Creates a shareable "codings.rda" dataset of codings, combining 
+# RQDA-retrieved and Google sheets-retrieved data.
 #
 # Not reproducible without access to raw data.
 #
-
-# TODO: get a temp codebook from both, save to a master gsheet
-# TODO: go back and remove codebook retrieval from RQDA, make it from master
 
 library(tidyverse)
 library(here)
