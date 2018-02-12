@@ -2,8 +2,6 @@
 # 
 # Not reproducible without access to raw data.
 
-# TODO: handle multiple raters
-
 source("R/retrieve_helpers_gsheet.R")
 library(tidyverse)
 library(here)
@@ -31,9 +29,10 @@ codings =
 
 # match RQDA categories for "awareness" and "security"
 codings = 
-  codings %>% mutate(category = 
-                       fct_recode(category, "lock" = "security",
-                                            "knowledge" = "awareness"))
+  codings %>% 
+  mutate(category = fct_recode(category, 
+                               "lock" = "security",
+                               "knowledge" = "awareness"))
   
 # match RQDA codings format & unfolding of convention
 codings =
@@ -45,6 +44,10 @@ codings =
     ) %>%
   select(fid, codename, category, code, subcode, rater) %>%
   filter(!is.na(codename))
+
+# keep ratings only from main rater, and remove the variable
+codings =
+  codings %>% filter(rater == "diogo") %>% select(-rater)
 
 # save
 write_csv(codings, here("data-raw/retrived_gsheets_codings.csv"))

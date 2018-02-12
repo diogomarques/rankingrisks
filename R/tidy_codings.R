@@ -36,8 +36,7 @@ codenames_both %>% filter(is.na(n_rqda))
 # add WAVE, arrange
 codings_gsheets =
   codings_gsheets %>% mutate(wave = "WAVE4") %>%
-  arrange(fid, codename) %>%
-  select(-rater)
+  arrange(fid, codename)
 
 # merge
 codings_both = 
